@@ -5,16 +5,42 @@ namespace AnimalZoo.App.Models;
 
 /// <summary>
 /// Abstract base class for all animals.
+/// Implements INotifyPropertyChanged so UI updates on property changes
+/// (e.g., when names are swapped by Monkey's crazy action).
 /// </summary>
 public abstract class Animal : INotifyPropertyChanged
 {
+    private string _name;
+    private int _age;
+    private AnimalMood _mood = AnimalMood.Hungry;
+
     /// <summary>Name of the animal.</summary>
-    public string Name { get; set; }
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (_name != value)
+            {
+                _name = value;
+                OnPropertyChanged(); // Name
+            }
+        }
+    }
 
     /// <summary>Age in years.</summary>
-    public int Age { get; set; }
-
-    private AnimalMood _mood = AnimalMood.Hungry;
+    public int Age
+    {
+        get => _age;
+        set
+        {
+            if (_age != value)
+            {
+                _age = value;
+                OnPropertyChanged(); // Age
+            }
+        }
+    }
 
     /// <summary>Current mood/state of the animal.</summary>
     public AnimalMood Mood
@@ -36,17 +62,17 @@ public abstract class Animal : INotifyPropertyChanged
     /// </summary>
     public virtual string DisplayState => Mood switch
     {
-        AnimalMood.Hungry => "Hungry",
-        AnimalMood.Happy => "Happy",
+        AnimalMood.Hungry   => "Hungry",
+        AnimalMood.Happy    => "Happy",
         AnimalMood.Sleeping => "Sleeping",
-        AnimalMood.Gaming => "Gaming",
+        AnimalMood.Gaming   => "Gaming",
         _ => "—"
     };
 
     protected Animal(string name, int age)
     {
-        Name = name;
-        Age = age;
+        _name = name;
+        _age = age;
         _mood = AnimalMood.Hungry;
     }
 
