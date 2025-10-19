@@ -94,6 +94,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private readonly System.Collections.Generic.Dictionary<Animal, CancellationTokenSource> _moodFlows = new();
 
+    /// <summary>Raised when UI should show a modal alert.</summary>
     public event Action<string>? AlertRequested;
 
     public MainWindowViewModel()
@@ -165,6 +166,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void CrazyAction()
     {
         if (SelectedAnimal is null) return;
+        
+        if (SelectedAnimal is Bird bird1 && bird1.Mood == AnimalMood.Sleeping)
+        {
+            // Bird's crazy action toggles flight; disallow while sleeping
+            AlertRequested?.Invoke($"{bird1.Name} is sleeping and cannot fly now.");
+            return;
+        }
 
         if (SelectedAnimal is ICrazyAction actor)
         {
@@ -184,7 +192,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             if (b.Mood == AnimalMood.Sleeping)
             {
-                LogEntries.Add($"{b.Name} is sleeping and cannot fly now.");
+                AlertRequested?.Invoke($"{b.Name} is sleeping and cannot fly now.");
                 return;
             }
 
@@ -254,38 +262,34 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        var typeName = SelectedAnimal.GetType().Name;                 // Cat / Dog / Bird / ...
-        var mood = SelectedAnimal.Mood.ToString().ToLowerInvariant(); // hungry / happy / sleeping / gaming / ...
+        var typeName = SelectedAnimal.GetType().Name;
+        var mood = SelectedAnimal.Mood.ToString().ToLowerInvariant();
         var exts = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
-        
+
         var names = new System.Collections.Generic.List<string>();
-        
-        if (SelectedAnimal is AnimalZoo.App.Models.Bird bird && bird.IsFlying)
+        if (SelectedAnimal is Bird bird && bird.IsFlying)
         {
             names.Add($"flying_{mood}");
             names.Add("flying");
         }
-        
         names.Add(mood);
-        
+
         foreach (var name in names)
         {
             foreach (var ext in exts)
             {
                 var uri = new Uri($"avares://AnimalZoo.App/Assets/{typeName}/{name}{ext}");
-                if (Avalonia.Platform.AssetLoader.Exists(uri))
+                if (AssetLoader.Exists(uri))
                 {
-                    using var stream = Avalonia.Platform.AssetLoader.Open(uri);
-                    CurrentImage = new Avalonia.Media.Imaging.Bitmap(stream);
+                    using var stream = AssetLoader.Open(uri);
+                    CurrentImage = new Bitmap(stream);
                     return;
                 }
             }
         }
 
-        // Not found -> clear image
         CurrentImage = null;
     }
-
 
     // --- Log management ---
 
