@@ -67,7 +67,7 @@
       <StackPanel Orientation="Horizontal" Spacing="8">
         <Button Content="Make Sound" Command="{Binding MakeSoundCommand}" />
         <Button Content="Crazy Action" Command="{Binding CrazyActionCommand}" />
-        <Button Content="Toggle Fly (Bird only)" Command="{Binding ToggleFlyCommand}" />
+        <Button Content="Toggle Fly (Bird and Eagle only)" Command="{Binding ToggleFlyCommand}" />
       </StackPanel>
 
       <!-- FEED with embedded clear button -->

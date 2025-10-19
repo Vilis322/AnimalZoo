@@ -113,7 +113,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         MakeSoundCommand = new RelayCommand(MakeSound,    () => SelectedAnimal is not null);
         FeedCommand = new RelayCommand(Feed,         () => SelectedAnimal is not null);
         CrazyActionCommand = new RelayCommand(CrazyAction,  () => SelectedAnimal is not null);
-        ToggleFlyCommand = new RelayCommand(ToggleFly,    () => SelectedAnimal is Bird);
+
+        // ENABLE for any Flyable, not only Bird
+        ToggleFlyCommand = new RelayCommand(ToggleFly,    () => SelectedAnimal is Flyable);
+
         ClearFoodCommand = new RelayCommand(() => FoodInput = string.Empty);
 
         ClearLogCommand = new RelayCommand(ClearLog);
@@ -167,10 +170,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (SelectedAnimal is null) return;
         
-        if (SelectedAnimal is Bird bird1 && bird1.Mood == AnimalMood.Sleeping)
+        if ((SelectedAnimal is Bird bird1 && bird1.Mood == AnimalMood.Sleeping) ||
+            (SelectedAnimal is Eagle eagle1 && eagle1.Mood == AnimalMood.Sleeping))
         {
-            // Bird's crazy action toggles flight; disallow while sleeping
-            AlertRequested?.Invoke($"{bird1.Name} is sleeping and cannot fly now.");
+            AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot fly now.");
             return;
         }
 
@@ -188,14 +191,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private void ToggleFly()
     {
+        if (SelectedAnimal is null) return;
+
+        // Sleeping restriction for known flying species
+        if ((SelectedAnimal is Bird bird && bird.Mood == AnimalMood.Sleeping) ||
+            (SelectedAnimal is Eagle eagle && eagle.Mood == AnimalMood.Sleeping))
+        {
+            AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot fly now.");
+            return;
+        }
+        
         if (SelectedAnimal is Bird b)
         {
-            if (b.Mood == AnimalMood.Sleeping)
-            {
-                AlertRequested?.Invoke($"{b.Name} is sleeping and cannot fly now.");
-                return;
-            }
-
             var wasFlying = b.IsFlying;
             b.ToggleFly();
 
@@ -203,6 +210,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 LogEntries.Add($"{b.Name} took off and shouts 'CHIRP!!!'");
             else if (!b.IsFlying && wasFlying)
                 LogEntries.Add($"{b.Name} landed.");
+            return;
+        }
+        
+        if (SelectedAnimal is Eagle e)
+        {
+            var wasFlying = e.IsFlying;
+            e.ToggleFly();
+
+            if (e.IsFlying && !wasFlying)
+                LogEntries.Add($"{e.Name} soars into the sky with a mighty screech!");
+            else if (!e.IsFlying && wasFlying)
+                LogEntries.Add($"{e.Name} folds its wings and perches.");
+            return;
+        }
+
+        // Generic Flyable fallback (for future animals)
+        if (SelectedAnimal is Flyable f)
+        {
+            f.Fly(); // toggle/perform flight with no special logging
         }
     }
 
@@ -267,11 +293,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         var exts = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
 
         var names = new System.Collections.Generic.List<string>();
-        if (SelectedAnimal is Bird bird && bird.IsFlying)
+
+        // flying priority for Bird and Eagle
+        if ((SelectedAnimal is Bird bird && bird.IsFlying) ||
+            (SelectedAnimal is Eagle eagle && eagle.IsFlying))
         {
             names.Add($"flying_{mood}");
             names.Add("flying");
         }
+
         names.Add(mood);
 
         foreach (var name in names)
