@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:AnimalZoo.App.ViewModels"
+        x:Class="AnimalZoo.App.Views.AddAnimalWindow"
+        Width="420" Height="260"
+        Title="Add Animal"
+        CanResize="False"
+        mc:Ignorable="d">
+
+  <Window.DataContext>
+    <vm:AddAnimalViewModel/>
+  </Window.DataContext>
+
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+    <TextBlock Margin="12" FontSize="18" FontWeight="SemiBold"
+               Text="Create a new animal" />
+
+    <Grid Grid.Row="1" Margin="12" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+      <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Name:"/>
+      <TextBox   Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Name, Mode=TwoWay}" Width="260" />
+
+      <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Age:"/>
+      <NumericUpDown Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Value="{Binding Age, Mode=TwoWay}" Minimum="0" Maximum="100" Width="120"/>
+
+      <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Type:"/>
+      <ComboBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8"
+                ItemsSource="{Binding AnimalTypes}"
+                SelectedItem="{Binding SelectedType, Mode=TwoWay}"
+                Width="260">
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding DisplayName}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </Grid>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12" Spacing="8">
+      <Button Content="Cancel" Click="OnCancel" />
+      <Button Content="OK" IsDefault="True" Click="OnOk" />
+    </StackPanel>
+  </Grid>
+</Window>

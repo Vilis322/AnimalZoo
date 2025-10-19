@@ -1,0 +1,61 @@
+# --- .NET / MSBuild ---
+bin/
+obj/
+*.user
+*.rsuser
+*.suo
+*.cache
+*.ide
+
+# VS / Rider / VSCode
+.vs/
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Avalonia build artifacts (встречаются при дизайнере/ресурсах)
+**/Avalonia/Resources.Inputs.cache
+
+# Publish / packaging
+publish/
+artifacts/
+
+# Logs & coverage
+*.log
+logs/
+coverage/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+._*
+
+# NuGet
+*.nupkg
+.nuget/packages/
+packages/
+project.lock.json
+
+# Rider caches
+.reSharper*/
+_ReSharper.*
+*.DotSettings.user
+
+# Temporary
+*.tmp
+*.bak
+*.orig
+*.swp
+*.swo
+
+# Local tools
+tools/
+.env
