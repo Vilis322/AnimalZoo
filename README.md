@@ -57,35 +57,34 @@ AnimalZoo/
    │  ├─ MainWindowViewModel.cs        
    │  └─ AddAnimalViewModel.cs         
    ├─ Models/
+   │  ├─ Enclosure/
+   │  │  ├─ Enclosure.cs
+   │  │  └─ EnclosureEvents.cs
    │  ├─ Animal.cs                     
    │  ├─ AnimalMood.cs                 
+   │  ├─ Bird.cs
    │  ├─ Cat.cs
    │  ├─ Dog.cs
-   │  └─ Bird.cs                       
+   │  ├─ Eagle.cs
+   │  ├─ Monkey.cs
+   │  └─ Raccoon.cs                       
    ├─ Interfaces/
    │  ├─ Flyable.cs                    
-   │  └─ ICrazyAction.cs               
+   │  ├─ ICrazyAction.cs  
+   │  └─ IRepository.cs  
+   ├─ Repositories/
+   │  └─ InMemoryRepository.cs      
    ├─ Utils/
-   │  ├─ RelayCommand.cs
-   │  ├─ AnimalFactory.cs             
-   │  └─ AssetService.cs               
+   │  ├─ AnimalFactory.cs
+   │  ├─ AssetService.cs            
+   │  └─ RelayCommand.cs               
    └─ Assets/
+      ├─ Bird/
       ├─ Cat/
-      │  ├─ hungry.png
-      │  ├─ happy.png
-      │  ├─ sleeping.png
-      │  └─ gaming.png
       ├─ Dog/
-      │  ├─ hungry.png
-      │  ├─ happy.png
-      │  ├─ sleeping.png
-      │  └─ gaming.png
-      └─ Bird/
-         ├─ hungry.png
-         ├─ happy.png
-         ├─ sleeping.png
-         ├─ gaming.png
-         └─ flying.png                 
+      ├─ Eagle/
+      ├─ Monkey/
+      └─ Raccoon/               
 ```
 ---
 
@@ -115,3 +114,11 @@ make clean
   - Optionally override Describe().
   - Have at least one unique “crazy” action.
   - Provide corresponding images in Assets/<AnimalName>/. (optional)
+
+## **Second Issue** (university task, issue pretty the same as the previous one)
+- Create three new animal types that inherit from Animal and optionally implement Flyable or ICrazyAction.
+- Each class must:
+    - Implement its own MakeSound() method.
+    - Optionally override Describe().
+    - Have at least one unique “crazy” action.
+    - Provide corresponding images in Assets/<AnimalName>/. (optional)
