@@ -12,7 +12,7 @@
   <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*,2*">
     <!-- HEADER -->
     <TextBlock Grid.ColumnSpan="2" Margin="12" FontSize="20" FontWeight="SemiBold"
-               Text="Animal Zoo — OOP + Avalonia Demo (MVVM + Generics + Events + LINQ)" />
+               Text="Animal Zoo — OOP" />
 
     <!-- LEFT: Animals list + actions -->
     <StackPanel Grid.Row="1" Grid.Column="0" Margin="12" Spacing="8">
