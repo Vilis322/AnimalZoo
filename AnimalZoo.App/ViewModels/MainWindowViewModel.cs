@@ -8,24 +8,60 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using AnimalZoo.App.Interfaces;
 using AnimalZoo.App.Models;
+using AnimalZoo.App.Repositories;
 using AnimalZoo.App.Utils;
-using Avalonia.Media;                 
-using Avalonia.Media.Imaging;         
-using Avalonia.Platform;              
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using System.Collections.Generic;
 
 namespace AnimalZoo.App.ViewModels;
 
+/// <summary>Row for "By type" statistics table.</summary>
+public sealed class AnimalTypeStat
+{
+    public string Type { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double AverageAge { get; init; }
+}
+
 /// <summary>
-/// Main view model holding animals, selected animal, actions, log and current image binding.
+/// Main view model with MVVM bindings, repository, enclosure usage,
+/// event-driven state machine per animal (Happy → Random(Night|Gaming) → Hungry),
+/// and LINQ statistics.
 /// </summary>
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
+    // UI-visible collections
     public ObservableCollection<Animal> Animals { get; } = new();
+    public ObservableCollection<string> LogEntries { get; } = new();
+
+    // Stats (table + lists)
+    public ObservableCollection<AnimalTypeStat> ByTypeStats { get; } = new();
+    public ObservableCollection<string> HungryStats { get; } = new();
+    private string _oldestStat = string.Empty;
+    public string OldestStat
+    {
+        get => _oldestStat;
+        private set { if (_oldestStat != value) { _oldestStat = value; OnPropertyChanged(); } }
+    }
+
+    // Repository and enclosure
+    private readonly IRepository<Animal> _repo = new InMemoryRepository<Animal>();
+    private readonly Enclosure<Animal> _enclosure = new();
+
+    // Event-driven states
+    public event Action<Animal>? HappyEvent;
+    public event Action<Animal>? GamingEvent;
+    public event Action<Animal>? NightEvent;
+
+    // Durations
+    private static readonly TimeSpan HappyDuration = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan NextPhaseDuration = TimeSpan.FromSeconds(10);
 
     private Animal? _selectedAnimal;
     private Animal? _subscribedAnimal;
 
-    /// <summary>Currently selected animal.</summary>
     public Animal? SelectedAnimal
     {
         get => _selectedAnimal;
@@ -50,12 +86,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 (RemoveAnimalCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (CrazyActionCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (ToggleFlyCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
-
-    /// <summary>Log entries displayed at the bottom.</summary>
-    public ObservableCollection<string> LogEntries { get; } = new();
 
     private string? _selectedLogEntry;
     public string? SelectedLogEntry
@@ -72,72 +106,91 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     }
 
     private IImage? _currentImage;
-    /// <summary>Current image for the selected animal and its mood.</summary>
     public IImage? CurrentImage
     {
         get => _currentImage;
         private set { if (!ReferenceEquals(_currentImage, value)) { _currentImage = value; OnPropertyChanged(); } }
     }
 
+    // Commands
     public ICommand RemoveAnimalCommand { get; }
     public ICommand MakeSoundCommand { get; }
     public ICommand FeedCommand { get; }
     public ICommand CrazyActionCommand { get; }
     public ICommand ToggleFlyCommand { get; }
     public ICommand ClearFoodCommand { get; }
-
     public ICommand ClearLogCommand { get; }
     public ICommand RemoveLogEntryByValueCommand { get; }
+    public ICommand DropFoodCommand { get; }
+    public ICommand RefreshStatsCommand { get; }
 
     private readonly Random _random = new();
-    private readonly TimeSpan _phaseDuration = TimeSpan.FromSeconds(20);
 
-    private readonly System.Collections.Generic.Dictionary<Animal, CancellationTokenSource> _moodFlows = new();
+    // Per-animal sequence cancellation
+    private readonly Dictionary<Animal, CancellationTokenSource> _flows = new();
 
-    /// <summary>Raised when UI should show a modal alert.</summary>
     public event Action<string>? AlertRequested;
 
     public MainWindowViewModel()
     {
+        // Seed data
         var cat = new Cat("Murr", 3);
         var dog = new Dog("Rex", 5);
         var bird = new Bird("Kiwi", 1);
 
-        Animals.Add(cat);
-        Animals.Add(dog);
-        Animals.Add(bird);
+        AddAnimal(cat);
+        AddAnimal(dog);
+        AddAnimal(bird);
+
+        // Enclosure event: neighbors react
+        _enclosure.AnimalJoinedInSameEnclosure += OnAnimalJoinedInSameEnclosure;
+        _enclosure.FoodDropped += (_, e) =>
+            LogEntries.Add($"Food dropped at {e.When:T}. Feeding order will be displayed...");
 
         SelectedAnimal = Animals.FirstOrDefault();
 
-        RemoveAnimalCommand = new RelayCommand(RemoveAnimal, () => SelectedAnimal is not null);
-        MakeSoundCommand = new RelayCommand(MakeSound,    () => SelectedAnimal is not null);
-        FeedCommand = new RelayCommand(Feed,         () => SelectedAnimal is not null);
-        CrazyActionCommand = new RelayCommand(CrazyAction,  () => SelectedAnimal is not null);
+        RemoveAnimalCommand           = new RelayCommand(RemoveAnimal,       () => SelectedAnimal is not null);
+        MakeSoundCommand              = new RelayCommand(MakeSound,          () => SelectedAnimal is not null);
+        FeedCommand                   = new RelayCommand(Feed,               () => SelectedAnimal is not null);
+        CrazyActionCommand            = new RelayCommand(CrazyAction,        () => SelectedAnimal is not null);
+        ToggleFlyCommand              = new RelayCommand(ToggleFly,          () => SelectedAnimal is Flyable);
+        ClearFoodCommand              = new RelayCommand(() => FoodInput = string.Empty);
+        ClearLogCommand               = new RelayCommand(ClearLog);
+        RemoveLogEntryByValueCommand  = new RelayCommand(RemoveLogEntryByValue);
+        DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync());
+        RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
 
-        // ENABLE for any Flyable, not only Bird
-        ToggleFlyCommand = new RelayCommand(ToggleFly,    () => SelectedAnimal is Flyable);
+        // Optional: human-readable event logs
+        HappyEvent  += a => LogEntries.Add($"{a.Name} is happy.");
+        GamingEvent += a => LogEntries.Add($"{a.Name} is gaming.");
+        NightEvent  += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
 
-        ClearFoodCommand = new RelayCommand(() => FoodInput = string.Empty);
-
-        ClearLogCommand = new RelayCommand(ClearLog);
-        RemoveLogEntryByValueCommand = new RelayCommand(RemoveLogEntryByValue);
+        UpdateStats();
     }
 
+    /// <summary>Adds an animal to repository, enclosure and UI list.</summary>
     public void AddAnimal(Animal animal)
     {
+        _repo.Add(animal);
+        _enclosure.Add(animal);
         Animals.Add(animal);
-        SelectedAnimal = animal;
         LogEntries.Add($"Added {animal.Name} ({animal.GetType().Name}).");
+        UpdateStats();
     }
 
     private void RemoveAnimal()
     {
         if (SelectedAnimal is null) return;
-        CancelMoodFlow(SelectedAnimal);
+        CancelFlow(SelectedAnimal);
         var name = SelectedAnimal.Name;
+
+        _repo.Remove(SelectedAnimal);
+        _enclosure.Remove(SelectedAnimal);
         Animals.Remove(SelectedAnimal);
+
         SelectedAnimal = Animals.FirstOrDefault();
         LogEntries.Add($"Removed {name}.");
+        UpdateStats();
     }
 
     private void MakeSound()
@@ -161,19 +214,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         LogEntries.Add($"{SelectedAnimal.Name} ate {food}.");
         FoodInput = string.Empty;
 
-        SelectedAnimal.SetMood(AnimalMood.Happy);
-        StartMoodFlow(SelectedAnimal);
+        StartPostFeedSequence(SelectedAnimal);
         UpdateCurrentImage();
+        UpdateStats();
     }
 
     private void CrazyAction()
     {
         if (SelectedAnimal is null) return;
-        
-        if ((SelectedAnimal is Bird bird1 && bird1.Mood == AnimalMood.Sleeping) ||
-            (SelectedAnimal is Eagle eagle1 && eagle1.Mood == AnimalMood.Sleeping))
+
+        // NEW: единое правило для всех — во сне crazy action запрещён
+        if (SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
-            AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot fly now.");
+            AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot perform a crazy action now.");
             return;
         }
 
@@ -181,26 +234,33 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             var text = actor.ActCrazy(Animals.ToList());
             if (!string.IsNullOrWhiteSpace(text))
+            {
                 LogEntries.Add(text);
+                // NEW: показываем всплывашку с результатом действия
+                AlertRequested?.Invoke(text);
+            }
         }
         else
         {
-            LogEntries.Add($"{SelectedAnimal.Name} has nothing crazy to do.");
+            var msg = $"{SelectedAnimal.Name} has nothing crazy to do.";
+            LogEntries.Add(msg);
+            AlertRequested?.Invoke(msg);
         }
+
+        UpdateStats();
     }
 
     private void ToggleFly()
     {
         if (SelectedAnimal is null) return;
 
-        // Sleeping restriction for known flying species
         if ((SelectedAnimal is Bird bird && bird.Mood == AnimalMood.Sleeping) ||
             (SelectedAnimal is Eagle eagle && eagle.Mood == AnimalMood.Sleeping))
         {
             AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot fly now.");
             return;
         }
-        
+
         if (SelectedAnimal is Bird b)
         {
             var wasFlying = b.IsFlying;
@@ -210,10 +270,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 LogEntries.Add($"{b.Name} took off and shouts 'CHIRP!!!'");
             else if (!b.IsFlying && wasFlying)
                 LogEntries.Add($"{b.Name} landed.");
-            return;
         }
-        
-        if (SelectedAnimal is Eagle e)
+        else if (SelectedAnimal is Eagle e)
         {
             var wasFlying = e.IsFlying;
             e.ToggleFly();
@@ -222,51 +280,119 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 LogEntries.Add($"{e.Name} soars into the sky with a mighty screech!");
             else if (!e.IsFlying && wasFlying)
                 LogEntries.Add($"{e.Name} folds its wings and perches.");
-            return;
         }
-
-        // Generic Flyable fallback (for future animals)
-        if (SelectedAnimal is Flyable f)
+        else if (SelectedAnimal is Flyable f)
         {
-            f.Fly(); // toggle/perform flight with no special logging
+            f.Fly();
         }
+
+        UpdateCurrentImage();
     }
 
-    private void StartMoodFlow(Animal animal)
+    private async Task DropFoodAsync()
     {
-        CancelMoodFlow(animal);
-        var cts = new CancellationTokenSource();
-        _moodFlows[animal] = cts;
-
-        _ = RunMoodFlowAsync(animal, cts.Token);
+        AlertRequested?.Invoke("Feeding started. Watch the log for the order and progress.");
+        try
+        {
+            await _enclosure.DropFoodAsync(
+                s => LogEntries.Add(s),
+                onAte: animal =>
+                {
+                    if (animal.Mood == AnimalMood.Hungry)
+                    {
+                        StartPostFeedSequence(animal);
+                        if (animal == SelectedAnimal) UpdateCurrentImage();
+                    }
+                    else
+                    {
+                        LogEntries.Add($"{animal.Name} was not hungry and ignored the food.");
+                    }
+                }
+            );
+            AlertRequested?.Invoke("Feeding finished.");
+        }
+        catch (Exception ex)
+        {
+            LogEntries.Add($"Feeding error: {ex.Message}");
+            AlertRequested?.Invoke("Feeding failed. See log for details.");
+        }
+        UpdateStats();
     }
 
-    private async Task RunMoodFlowAsync(Animal animal, CancellationToken token)
+    // ---- Event-driven sequence per animal ----
+
+    /// <summary>
+    /// Start: Happy (5s) → Random: Night(Sleeping 10s) or Gaming(10s) → Hungry (stop).
+    /// Cancels any prior flow for that animal.
+    /// </summary>
+    private void StartPostFeedSequence(Animal animal)
+    {
+        CancelFlow(animal);
+        var cts = new CancellationTokenSource();
+        _flows[animal] = cts;
+
+        _ = RunSequenceAsync(animal, cts.Token);
+    }
+
+    private async Task RunSequenceAsync(Animal animal, CancellationToken token)
     {
         try
         {
-            await Task.Delay(_phaseDuration, token);
-            var mid = _random.Next(2) == 0 ? AnimalMood.Sleeping : AnimalMood.Gaming;
-            animal.SetMood(mid);
+            // Happy phase
+            animal.SetMood(AnimalMood.Happy);
+            HappyEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
+            await Task.Delay(HappyDuration, token);
 
-            await Task.Delay(_phaseDuration, token);
+            // Random next: Night (Sleeping) OR Gaming
+            var nextIsNight = _random.Next(2) == 0;
+
+            if (nextIsNight)
+            {
+                animal.SetMood(AnimalMood.Sleeping);
+                NightEvent?.Invoke(animal);
+                if (animal == SelectedAnimal) UpdateCurrentImage();
+                await Task.Delay(NextPhaseDuration, token);
+            }
+            else
+            {
+                animal.SetMood(AnimalMood.Gaming);
+                GamingEvent?.Invoke(animal);
+                if (animal == SelectedAnimal) UpdateCurrentImage();
+                await Task.Delay(NextPhaseDuration, token);
+            }
+
+            // End at Hungry and stop
             animal.SetMood(AnimalMood.Hungry);
             if (animal == SelectedAnimal) UpdateCurrentImage();
+
+            CancelFlow(animal);
         }
         catch (TaskCanceledException)
         {
-            // ignored
+            // interrupted — do nothing
         }
     }
 
-    private void CancelMoodFlow(Animal animal)
+    private void CancelFlow(Animal animal)
     {
-        if (_moodFlows.TryGetValue(animal, out var old))
+        if (_flows.TryGetValue(animal, out var old))
         {
             old.Cancel();
             old.Dispose();
-            _moodFlows.Remove(animal);
+            _flows.Remove(animal);
+        }
+    }
+
+    // --- Enclosure neighbor reactions ---
+
+    private void OnAnimalJoinedInSameEnclosure(object? sender, AnimalJoinedEventArgs e)
+    {
+        foreach (var resident in e.CurrentResidents)
+        {
+            var reaction = resident.OnNeighborJoined(e.Newcomer);
+            if (!string.IsNullOrWhiteSpace(reaction))
+                LogEntries.Add(reaction);
         }
     }
 
@@ -274,9 +400,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private void OnSelectedAnimalPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Animal.DisplayState) || e.PropertyName == nameof(Animal.Mood))
+        if (e.PropertyName == nameof(Animal.DisplayState) || e.PropertyName == nameof(Animal.Mood) || e.PropertyName == nameof(Animal.Name))
         {
             UpdateCurrentImage();
+            UpdateStats();
         }
     }
 
@@ -292,16 +419,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         var mood = SelectedAnimal.Mood.ToString().ToLowerInvariant();
         var exts = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
 
-        var names = new System.Collections.Generic.List<string>();
-
-        // flying priority for Bird and Eagle
+        var names = new List<string>();
         if ((SelectedAnimal is Bird bird && bird.IsFlying) ||
             (SelectedAnimal is Eagle eagle && eagle.IsFlying))
         {
             names.Add($"flying_{mood}");
             names.Add("flying");
         }
-
         names.Add(mood);
 
         foreach (var name in names)
@@ -319,6 +443,54 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
 
         CurrentImage = null;
+    }
+
+    // --- LINQ Stats & reset ---
+
+    private void UpdateStats()
+    {
+        ByTypeStats.Clear();
+        HungryStats.Clear();
+        OldestStat = string.Empty;
+
+        var animals = _repo.GetAll().ToList();
+        if (animals.Count == 0) return;
+
+        foreach (var row in animals
+            .GroupBy(a => a.GetType().Name)
+            .OrderBy(g => g.Key)
+            .Select(g => new AnimalTypeStat { Type = g.Key, Count = g.Count(), AverageAge = g.Average(a => a.Age) }))
+        {
+            ByTypeStats.Add(row);
+        }
+
+        foreach (var s in animals
+            .Where(a => a.Mood == AnimalMood.Hungry)
+            .OrderByDescending(a => a.Age)
+            .Select(a => $"{a.Name} ({a.GetType().Name}, {a.Age}y)"))
+        {
+            HungryStats.Add(s);
+        }
+        if (HungryStats.Count == 0) HungryStats.Add("— none —");
+
+        var oldest = animals.OrderByDescending(a => a.Age).First();
+        OldestStat = $"{oldest.Name} ({oldest.GetType().Name}, {oldest.Age}y)";
+    }
+
+    /// <summary>
+    /// Reset all animals to Hungry, cancel all flows, refresh stats and image.
+    /// Used by Refresh Stats per assignment.
+    /// </summary>
+    private void ResetAllToHungryAndRefresh()
+    {
+        foreach (var a in Animals.ToList())
+        {
+            CancelFlow(a);
+            a.SetMood(AnimalMood.Hungry);
+        }
+        UpdateCurrentImage();
+        UpdateStats();
+        LogEntries.Add("All animals reset to Hungry (via Refresh Stats).");
     }
 
     // --- Log management ---

@@ -5,16 +5,16 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Class="AnimalZoo.App.Views.MainWindow"
-    Width="900" Height="600"
+    Width="980" Height="700"
     Title="Animal Zoo"
     mc:Ignorable="d">
 
   <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*,2*">
     <!-- HEADER -->
     <TextBlock Grid.ColumnSpan="2" Margin="12" FontSize="20" FontWeight="SemiBold"
-               Text="Animal Zoo" />
+               Text="Animal Zoo — OOP + Avalonia Demo (MVVM + Generics + Events + LINQ)" />
 
-    <!-- LEFT: Animals list -->
+    <!-- LEFT: Animals list + actions -->
     <StackPanel Grid.Row="1" Grid.Column="0" Margin="12" Spacing="8">
       <TextBlock Text="Animals" FontWeight="SemiBold" />
       <ListBox ItemsSource="{Binding Animals}"
@@ -36,13 +36,19 @@
         <Button Content="Add Animal" Click="OnAddAnimalClick" />
         <Button Content="Remove Animal" Command="{Binding RemoveAnimalCommand}" />
       </StackPanel>
+
+      <!-- Enclosure actions -->
+      <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+        <Button Content="Drop Food (feed all)" Command="{Binding DropFoodCommand}" />
+        <Button Content="Refresh Stats (reset to Hungry)" Command="{Binding RefreshStatsCommand}" />
+      </StackPanel>
     </StackPanel>
 
-    <!-- RIGHT: Details + Actions -->
+    <!-- RIGHT: Details + Actions + Stats -->
     <StackPanel Grid.Row="1" Grid.Column="1" Margin="12" Spacing="10">
       <TextBlock Text="Details" FontWeight="SemiBold" />
 
-      <!-- Animal image (auto from CurrentImagePath) -->
+      <!-- Animal image -->
       <Border Padding="6" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Margin="0,0,0,6">
         <Image Source="{Binding CurrentImage}"
                Height="160"
@@ -51,7 +57,6 @@
       </Border>
 
       <Border Padding="10" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
-        <!-- spacer column to align values -->
         <Grid ColumnDefinitions="Auto,10,*" RowDefinitions="Auto,Auto,Auto">
           <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:"/>
           <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedAnimal.Name}"/>
@@ -67,7 +72,7 @@
       <StackPanel Orientation="Horizontal" Spacing="8">
         <Button Content="Make Sound" Command="{Binding MakeSoundCommand}" />
         <Button Content="Crazy Action" Command="{Binding CrazyActionCommand}" />
-        <Button Content="Toggle Fly (Bird and Eagle only)" Command="{Binding ToggleFlyCommand}" />
+        <Button Content="Toggle Fly (Flyable)" Command="{Binding ToggleFlyCommand}" />
       </StackPanel>
 
       <!-- FEED with embedded clear button -->
@@ -76,7 +81,6 @@
           <TextBox Width="260"
                    Watermark="Food to feed..."
                    Text="{Binding FoodInput, Mode=TwoWay}" />
-          <!-- overlay clear button in the same cell -->
           <Button Content="×"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
@@ -86,24 +90,23 @@
                   ToolTip.Tip="Clear input" />
         </Grid>
         <Button Grid.Column="1"
-                Content="Feed"
+                Content="Feed (selected)"
                 Margin="8,0,0,0"
                 Command="{Binding FeedCommand}" />
       </Grid>
 
-      <!-- LOG header with actions -->
+      <!-- LOG action row -->
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8" Margin="0,10,0,0">
         <TextBlock Text="Log" FontWeight="SemiBold" />
         <Button Content="Delete selected"
                 Command="{Binding RemoveLogEntryByValueCommand}"
-                CommandParameter="{Binding SelectedLogEntry}"
-                IsEnabled="{Binding SelectedLogEntry, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                CommandParameter="{Binding SelectedLogEntry}"/>
         <Button Content="Clear log" Command="{Binding ClearLogCommand}" />
       </StackPanel>
 
       <!-- LOG list with context menu per item -->
       <ListBox ItemsSource="{Binding LogEntries}"
-               Height="160"
+               Height="140"
                SelectedItem="{Binding SelectedLogEntry}">
         <ListBox.ItemTemplate>
           <DataTemplate>
@@ -120,11 +123,53 @@
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
+
+      <!-- STATS -->
+      <TextBlock Text="Stats (LINQ)" FontWeight="SemiBold" Margin="0,8,0,0"/>
+
+      <!-- By type table -->
+      <Border Padding="8" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6">
+        <StackPanel Spacing="6">
+          <!-- Header -->
+          <Grid ColumnDefinitions="2*,*,*" Margin="0,0,0,4">
+            <TextBlock Grid.Column="0" Text="Type" FontWeight="SemiBold"/>
+            <TextBlock Grid.Column="1" Text="Count" FontWeight="SemiBold"/>
+            <TextBlock Grid.Column="2" Text="Average age" FontWeight="SemiBold"/>
+          </Grid>
+
+          <!-- Rows -->
+          <ItemsControl ItemsSource="{Binding ByTypeStats}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="2*,*,*" Margin="0,2,0,2">
+                  <TextBlock Grid.Column="0" Text="{Binding Type}"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Count}"/>
+                  <TextBlock Grid.Column="2" Text="{Binding AverageAge, StringFormat='{}{0:F1}'}"/>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Hungry list -->
+          <TextBlock Text="Hungry animals (older first):" FontWeight="SemiBold" Margin="0,8,0,0"/>
+          <ItemsControl ItemsSource="{Binding HungryStats}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Oldest -->
+          <TextBlock Text="Oldest animal:" FontWeight="SemiBold" Margin="0,8,0,0"/>
+          <TextBlock Text="{Binding OldestStat}"/>
+        </StackPanel>
+      </Border>
     </StackPanel>
 
     <!-- FOOTER -->
     <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="12"
                Opacity="0.7"
-               Text="Tips: Select an animal, watch image change with its mood. Right-click a log entry to delete it." />
+               Text="Tips: Drop Food feeds all (with progress). Refresh Stats resets all states to Hungry." />
   </Grid>
 </Window>

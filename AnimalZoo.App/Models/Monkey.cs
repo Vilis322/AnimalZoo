@@ -6,10 +6,11 @@ using AnimalZoo.App.Interfaces;
 namespace AnimalZoo.App.Models;
 
 /// <summary>
-/// Monkey: chaos action swaps names of two animals (including itself).
+/// Monkey: chaos action swaps names of two animals; reacts playfully to newcomers.
 /// </summary>
 public sealed class Monkey : Animal, ICrazyAction
 {
+    /// <summary>Create a Monkey.</summary>
     public Monkey(string name, int age) : base(name, age) { }
 
     /// <inheritdoc />
@@ -34,4 +35,10 @@ public sealed class Monkey : Animal, ICrazyAction
         (a.Name, b.Name) = (b.Name, a.Name);
         return $"{Name} swapped the names of {a.GetType().Name} and {b.GetType().Name}! Chaos!";
     }
+
+    /// <summary>
+    /// Reaction to a newcomer in the same enclosure.
+    /// </summary>
+    public override string OnNeighborJoined(Animal newcomer)
+        => $"{Name} squeals happily and throws a peanut to {newcomer.Name}.";
 }

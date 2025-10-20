@@ -5,7 +5,7 @@ namespace AnimalZoo.App.Models;
 
 /// <summary>
 /// Eagle: a flying predator; cannot fly while sleeping.
-/// Shows mood and flying state in DisplayState.
+/// Shows mood and flying state in DisplayState. Implements Flyable and ICrazyAction.
 /// </summary>
 public sealed class Eagle : Animal, Flyable, ICrazyAction
 {
@@ -15,6 +15,7 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     /// <inheritdoc />
     public override string DisplayState => $"{base.DisplayState} • {(IsFlying ? "Flying" : "Perched")}";
 
+    /// <summary>Create an Eagle.</summary>
     public Eagle(string name, int age) : base(name, age)
     {
         IsFlying = false;
@@ -61,5 +62,16 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
             IsFlying = false;
             base.OnPropertyChanged(nameof(DisplayState));
         }
+    }
+
+    /// <summary>
+    /// Reaction to a newcomer in the same enclosure.
+    /// </summary>
+    public override string OnNeighborJoined(Animal newcomer)
+    {
+        // Slightly different reaction to other birds vs other animals.
+        return newcomer is Bird
+            ? $"{Name} spreads wings and asserts dominance over {newcomer.Name}."
+            : $"{Name} watches {newcomer.Name} from above with a piercing look.";
     }
 }

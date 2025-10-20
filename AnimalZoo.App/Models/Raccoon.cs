@@ -5,7 +5,7 @@ using AnimalZoo.App.Interfaces;
 namespace AnimalZoo.App.Models;
 
 /// <summary>
-/// Raccoon: finds a shiny thing as a crazy action.
+/// Raccoon: finds a shiny thing as a crazy action; reacts to neighbors curiously.
 /// </summary>
 public sealed class Raccoon : Animal, ICrazyAction
 {
@@ -15,6 +15,7 @@ public sealed class Raccoon : Animal, ICrazyAction
         "a chrome bolt", "a glass marble", "a glittering ring"
     };
 
+    /// <summary>Create a Raccoon.</summary>
     public Raccoon(string name, int age) : base(name, age) { }
 
     /// <inheritdoc />
@@ -30,4 +31,10 @@ public sealed class Raccoon : Animal, ICrazyAction
         var item = ShinyThings[rnd.Next(ShinyThings.Length)];
         return $"{Name} found {item}!";
     }
+
+    /// <summary>
+    /// Reaction to a newcomer in the same enclosure.
+    /// </summary>
+    public override string OnNeighborJoined(Animal newcomer)
+        => $"{Name} sniffs at {newcomer.Name} and guards the shiny stash.";
 }

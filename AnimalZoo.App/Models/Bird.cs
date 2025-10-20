@@ -4,7 +4,7 @@ using AnimalZoo.App.Interfaces;
 namespace AnimalZoo.App.Models;
 
 /// <summary>
-/// Bird animal. Implements Flyable; crazy action toggles flying and shouts.
+/// Bird animal. Implements Flyable; cannot fly while sleeping.
 /// </summary>
 public sealed class Bird : Animal, Flyable, ICrazyAction
 {
@@ -13,7 +13,7 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
 
     /// <summary>Show both mood and flying state.</summary>
     public override string DisplayState
-        => $"{base.DisplayState} and {(IsFlying ? "Flying" : "Perched")}";
+        => $"{base.DisplayState} • {(IsFlying ? "Flying" : "Perched")}";
 
     public Bird(string name, int age) : base(name, age)
     {
@@ -22,33 +22,20 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
 
     public override string MakeSound() => "Chirp!";
 
-    /// <summary>
-    /// Toggle flight only if not sleeping.
-    /// </summary>
+    /// <summary>Toggle flight only if not sleeping.</summary>
     public void ToggleFly()
     {
-        if (Mood == AnimalMood.Sleeping)
-        {
-            // Cannot change flight while sleeping
-            return;
-        }
-
+        if (Mood == AnimalMood.Sleeping) return;
         IsFlying = !IsFlying;
-        // DisplayState depends on IsFlying
         base.OnPropertyChanged(nameof(DisplayState));
     }
 
     public void Fly() => ToggleFly();
 
-    /// <summary>
-    /// If sleeping, do nothing; otherwise toggle flight with shout.
-    /// </summary>
     public string ActCrazy(List<Animal> allAnimals)
     {
         if (Mood == AnimalMood.Sleeping)
-        {
             return $"{Name} is sleeping and cannot fly now.";
-        }
 
         ToggleFly();
         return IsFlying
@@ -56,9 +43,7 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
             : $"{Name} lands gracefully.";
     }
 
-    /// <summary>
-    /// If mood becomes Sleeping, force landing.
-    /// </summary>
+    /// <summary>Force landing when falling asleep.</summary>
     protected override void OnMoodChanged(AnimalMood newMood)
     {
         if (newMood == AnimalMood.Sleeping && IsFlying)
@@ -67,4 +52,7 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
             base.OnPropertyChanged(nameof(DisplayState));
         }
     }
+
+    public override string OnNeighborJoined(Animal newcomer)
+        => $"{Name} chirps at {newcomer.Name}.";
 }

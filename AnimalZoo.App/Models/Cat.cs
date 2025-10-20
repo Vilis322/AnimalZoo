@@ -1,25 +1,23 @@
-using System;
-using System.Collections.Generic;
 using AnimalZoo.App.Interfaces;
 
 namespace AnimalZoo.App.Models;
 
 /// <summary>
-/// Cat animal. Crazy action: steals food from the kitchen (flavor text).
+/// Cat animal.
 /// </summary>
 public sealed class Cat : Animal, ICrazyAction
 {
     public Cat(string name, int age) : base(name, age) { }
 
-    /// <inheritdoc />
     public override string MakeSound() => "Meow!";
 
-    /// <inheritdoc />
-    public string ActCrazy(List<Animal> allAnimals)
+    public string ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
     {
-        var items = new[] { "cheese", "sausage", "fish", "butter", "yogurt" };
-        var rand = new Random();
-        var item = items[rand.Next(items.Length)];
-        return $"{Name} stole {item} from the kitchen!";
+        // steals food as a crazy action
+        return $"{Name} stealthily stole some food from the kitchen!";
     }
+
+    public override string OnNeighborJoined(Animal newcomer)
+        => $"{Name} hisses at {newcomer.Name}!";
 }
+
