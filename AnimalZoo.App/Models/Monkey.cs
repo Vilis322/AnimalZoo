@@ -20,7 +20,7 @@ public sealed class Monkey : Animal, ICrazyAction
     public override string Describe() => $"{Name} is a playful Monkey aged {Age}.";
 
     /// <summary>
-    /// Swap names of two random animals if there are at least two.
+    /// Swap names of two random animals and report the actual names that were swapped.
     /// </summary>
     public string ActCrazy(List<Animal> allAnimals)
     {
@@ -32,8 +32,15 @@ public sealed class Monkey : Animal, ICrazyAction
         Animal b;
         do { b = allAnimals[rnd.Next(allAnimals.Count)]; } while (ReferenceEquals(a, b));
 
+        // Capture original names for the message
+        var originalA = a.Name;
+        var originalB = b.Name;
+
+        // Perform the swap
         (a.Name, b.Name) = (b.Name, a.Name);
-        return $"{Name} swapped the names of {a.GetType().Name} and {b.GetType().Name}! Chaos!";
+
+        // Return message with instance names 
+        return $"{Name} swapped names of a {originalA} ({a.GetType().Name}) and {originalB} ({b.GetType().Name}). Chaos!";
     }
 
     /// <summary>

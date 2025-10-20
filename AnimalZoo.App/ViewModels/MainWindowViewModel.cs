@@ -20,8 +20,11 @@ namespace AnimalZoo.App.ViewModels;
 /// <summary>Row for "By type" statistics table.</summary>
 public sealed class AnimalTypeStat
 {
+    /// <summary>Type name (e.g., Cat, Dog).</summary>
     public string Type { get; init; } = string.Empty;
+    /// <summary>Total animals of this type.</summary>
     public int Count { get; init; }
+    /// <summary>Average age across this type.</summary>
     public double AverageAge { get; init; }
 }
 
@@ -62,6 +65,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private Animal? _selectedAnimal;
     private Animal? _subscribedAnimal;
 
+    // Feeding re-entrance guard
+    private bool _isFeeding = false;
+
+    /// <summary>Currently selected animal.</summary>
     public Animal? SelectedAnimal
     {
         get => _selectedAnimal;
@@ -106,6 +113,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     }
 
     private IImage? _currentImage;
+    /// <summary>Current image for the selected animal and its mood.</summary>
     public IImage? CurrentImage
     {
         get => _currentImage;
@@ -129,6 +137,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     // Per-animal sequence cancellation
     private readonly Dictionary<Animal, CancellationTokenSource> _flows = new();
 
+    /// <summary>Raised when UI should show a modal alert.</summary>
     public event Action<string>? AlertRequested;
 
     public MainWindowViewModel()
@@ -157,10 +166,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         ClearFoodCommand              = new RelayCommand(() => FoodInput = string.Empty);
         ClearLogCommand               = new RelayCommand(ClearLog);
         RemoveLogEntryByValueCommand  = new RelayCommand(RemoveLogEntryByValue);
-        DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync());
+        // Guarded command: disabled while feeding is in progress
+        DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
-
-        // Optional: human-readable event logs
+        
         HappyEvent  += a => LogEntries.Add($"{a.Name} is happy.");
         GamingEvent += a => LogEntries.Add($"{a.Name} is gaming.");
         NightEvent  += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
@@ -176,6 +185,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         Animals.Add(animal);
         LogEntries.Add($"Added {animal.Name} ({animal.GetType().Name}).");
         UpdateStats();
+        (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
     private void RemoveAnimal()
@@ -191,6 +201,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         SelectedAnimal = Animals.FirstOrDefault();
         LogEntries.Add($"Removed {name}.");
         UpdateStats();
+        (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
     private void MakeSound()
@@ -223,7 +234,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (SelectedAnimal is null) return;
 
-        // NEW: единое правило для всех — во сне crazy action запрещён
+        // Unified rule: sleeping animals cannot perform crazy actions
         if (SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
             AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot perform a crazy action now.");
@@ -236,8 +247,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (!string.IsNullOrWhiteSpace(text))
             {
                 LogEntries.Add(text);
-                // NEW: показываем всплывашку с результатом действия
-                AlertRequested?.Invoke(text);
+                AlertRequested?.Invoke(text); // also show alert
             }
         }
         else
@@ -291,6 +301,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private async Task DropFoodAsync()
     {
+        if (_isFeeding) return; // safety double-click guard
+
+        _isFeeding = true;
+        (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
+
         AlertRequested?.Invoke("Feeding started. Watch the log for the order and progress.");
         try
         {
@@ -316,6 +331,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             LogEntries.Add($"Feeding error: {ex.Message}");
             AlertRequested?.Invoke("Feeding failed. See log for details.");
         }
+        finally
+        {
+            _isFeeding = false;
+            (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
         UpdateStats();
     }
 
@@ -517,3 +538,4 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? prop = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 }
+
