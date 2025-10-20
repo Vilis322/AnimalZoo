@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using AnimalZoo.App.ViewModels;
 
 namespace AnimalZoo.App.Views;
@@ -26,7 +28,15 @@ public partial class MainWindow : Window
         };
     }
 
-    private async void OnAddAnimalClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    /// <summary>
+    /// Loads the XAML for this Window. This implementation avoids relying on generated InitializeComponent().
+    /// </summary>
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    private async void OnAddAnimalClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm) return;
 
