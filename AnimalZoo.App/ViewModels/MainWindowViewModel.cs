@@ -57,7 +57,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public event Action<Animal>? HappyEvent;
     public event Action<Animal>? GamingEvent;
     public event Action<Animal>? NightEvent;
-    public event Action<Animal>? HungryEvent; // <--- added: hungry transition event
+    public event Action<Animal>? HungryEvent;
 
     // Durations
     private static readonly TimeSpan HappyDuration = TimeSpan.FromSeconds(5);
@@ -167,21 +167,30 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         ClearFoodCommand              = new RelayCommand(() => FoodInput = string.Empty);
         ClearLogCommand               = new RelayCommand(ClearLog);
         RemoveLogEntryByValueCommand  = new RelayCommand(RemoveLogEntryByValue);
-        // Guarded command: disabled while feeding is in progress
         DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
         
         HappyEvent   += a => LogEntries.Add($"{a.Name} is happy.");
         GamingEvent  += a => LogEntries.Add($"{a.Name} is gaming.");
         NightEvent   += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
-        HungryEvent  += a => LogEntries.Add($"{a.Name} is hungry."); // <--- added: log when becomes hungry
+        HungryEvent  += a => LogEntries.Add($"{a.Name} is hungry.");
 
         UpdateStats();
     }
 
-    /// <summary>Adds an animal to repository, enclosure and UI list.</summary>
+    /// <summary>
+    /// Adds an animal to repository, enclosure and UI list.
+    /// Rejects animals without a valid name with a user-friendly alert.
+    /// </summary>
     public void AddAnimal(Animal animal)
     {
+        // --- Guard: do not allow unnamed animals ---
+        if (string.IsNullOrWhiteSpace(animal.Name) || animal.Name == "Unnamed")
+        {
+            AlertRequested?.Invoke("Unable to create an animal without a name. Please enter the animal's name!");
+            return;
+        }
+
         _repo.Add(animal);
         _enclosure.Add(animal);
         Animals.Add(animal);
@@ -387,7 +396,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
             // End at Hungry and stop (log via HungryEvent)
             animal.SetMood(AnimalMood.Hungry);
-            HungryEvent?.Invoke(animal); // <--- added: emit hungry transition
+            HungryEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
 
             CancelFlow(animal);
@@ -495,7 +504,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             HungryStats.Add(s);
         }
-        if (HungryStats.Count == 0) HungryStats.Add("No animals are hungry right now.");
+
+        if (HungryStats.Count == 0)
+            HungryStats.Add("No animals are hungry right now.");
 
         var oldest = animals.OrderByDescending(a => a.Age).First();
         OldestStat = $"{oldest.Name} ({oldest.GetType().Name}, {oldest.Age}y)";
@@ -541,5 +552,3 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? prop = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 }
-
-
