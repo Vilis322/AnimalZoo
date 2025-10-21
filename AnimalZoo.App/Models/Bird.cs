@@ -5,6 +5,7 @@ namespace AnimalZoo.App.Models;
 
 /// <summary>
 /// Bird animal. Implements Flyable; cannot fly while sleeping.
+/// Shows mood and flying state in DisplayState.
 /// </summary>
 public sealed class Bird : Animal, Flyable, ICrazyAction
 {
@@ -15,6 +16,13 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
     public override string DisplayState
         => $"{base.DisplayState} • {(IsFlying ? "Flying" : "Perched")}";
 
+    /// <summary>Create a Bird with fractional age support.</summary>
+    public Bird(string name, double age) : base(name, age)
+    {
+        IsFlying = false;
+    }
+
+    /// <summary>Backward-compatible ctor (int age).</summary>
     public Bird(string name, int age) : base(name, age)
     {
         IsFlying = false;

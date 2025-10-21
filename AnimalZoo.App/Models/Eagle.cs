@@ -15,7 +15,13 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     /// <inheritdoc />
     public override string DisplayState => $"{base.DisplayState} • {(IsFlying ? "Flying" : "Perched")}";
 
-    /// <summary>Create an Eagle.</summary>
+    /// <summary>Create an Eagle with fractional age support.</summary>
+    public Eagle(string name, double age) : base(name, age)
+    {
+        IsFlying = false;
+    }
+
+    /// <summary>Backward-compatible ctor (int age).</summary>
     public Eagle(string name, int age) : base(name, age)
     {
         IsFlying = false;

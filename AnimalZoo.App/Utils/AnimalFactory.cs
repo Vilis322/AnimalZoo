@@ -25,14 +25,11 @@ public sealed class AnimalTypeOption
 
 /// <summary>
 /// Provides reflection-based discovery of Animal subclasses + factory.
-/// Ensures future Animal classes appear automatically in the Type dropdown,
-/// assuming they are non-abstract and have ctor (string name, int age).
+/// Ensures future Animal classes appear automatically in the Type dropdown.
 /// </summary>
 public static class AnimalFactory
 {
-    /// <summary>
-    /// Get list of all non-abstract subclasses of Animal in current assembly.
-    /// </summary>
+    /// <summary>Get list of all non-abstract subclasses of Animal in current assembly.</summary>
     public static List<AnimalTypeOption> GetAvailableAnimalTypes()
     {
         var asm = Assembly.GetExecutingAssembly();
@@ -49,13 +46,27 @@ public static class AnimalFactory
     private static string ToDisplayName(Type t) => t.Name;
 
     /// <summary>
-    /// Create Animal instance by (string name, int age) ctor.
+    /// Create Animal instance by best-matching ctor:
+    /// prefers (string name, double age); falls back to (string name, int age) if necessary.
     /// </summary>
-    public static Animal? Create(Type? animalType, string name, int age)
+    public static Animal? Create(Type? animalType, string name, double age)
     {
         if (animalType is null) return null;
-        var ctor = animalType.GetConstructor(new[] { typeof(string), typeof(int) });
-        if (ctor is null) return null;
-        return ctor.Invoke(new object[] { name, age }) as Animal;
+
+        // Prefer (string, double)
+        var ctorDouble = animalType.GetConstructor(new[] { typeof(string), typeof(double) });
+        if (ctorDouble is not null)
+            return ctorDouble.Invoke(new object[] { name, age }) as Animal;
+
+        // Fallback to (string, int) if class does not yet support double
+        var ctorInt = animalType.GetConstructor(new[] { typeof(string), typeof(int) });
+        if (ctorInt is not null)
+        {
+            // Round towards nearest int; this preserves reasonable semantics for older animals.
+            var rounded = (int)Math.Round(age, MidpointRounding.AwayFromZero);
+            return ctorInt.Invoke(new object[] { name, rounded }) as Animal;
+        }
+
+        return null;
     }
 }
