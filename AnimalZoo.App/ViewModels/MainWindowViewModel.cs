@@ -57,6 +57,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public event Action<Animal>? HappyEvent;
     public event Action<Animal>? GamingEvent;
     public event Action<Animal>? NightEvent;
+    public event Action<Animal>? HungryEvent; // <--- added: hungry transition event
 
     // Durations
     private static readonly TimeSpan HappyDuration = TimeSpan.FromSeconds(5);
@@ -170,9 +171,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
         
-        HappyEvent  += a => LogEntries.Add($"{a.Name} is happy.");
-        GamingEvent += a => LogEntries.Add($"{a.Name} is gaming.");
-        NightEvent  += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
+        HappyEvent   += a => LogEntries.Add($"{a.Name} is happy.");
+        GamingEvent  += a => LogEntries.Add($"{a.Name} is gaming.");
+        NightEvent   += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
+        HungryEvent  += a => LogEntries.Add($"{a.Name} is hungry."); // <--- added: log when becomes hungry
 
         UpdateStats();
     }
@@ -383,8 +385,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 await Task.Delay(NextPhaseDuration, token);
             }
 
-            // End at Hungry and stop
+            // End at Hungry and stop (log via HungryEvent)
             animal.SetMood(AnimalMood.Hungry);
+            HungryEvent?.Invoke(animal); // <--- added: emit hungry transition
             if (animal == SelectedAnimal) UpdateCurrentImage();
 
             CancelFlow(animal);
@@ -492,7 +495,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             HungryStats.Add(s);
         }
-        if (HungryStats.Count == 0) HungryStats.Add("— none —");
+        if (HungryStats.Count == 0) HungryStats.Add("No animals are hungry right now.");
 
         var oldest = animals.OrderByDescending(a => a.Age).First();
         OldestStat = $"{oldest.Name} ({oldest.GetType().Name}, {oldest.Age}y)";
@@ -538,4 +541,5 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? prop = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 }
+
 
