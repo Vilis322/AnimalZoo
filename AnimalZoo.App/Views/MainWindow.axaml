@@ -17,7 +17,6 @@
     <!-- LEFT: Animals list + actions -->
     <StackPanel Grid.Row="1" Grid.Column="0" Margin="12" Spacing="8">
       <TextBlock Text="Animals" FontWeight="SemiBold" />
-      <!-- Автовысота + встроенный скролл у ListBox; ограничим по максимуму чтобы верстка не разъехалась -->
       <ListBox ItemsSource="{Binding Animals}"
                SelectedItem="{Binding SelectedAnimal}"
                MaxHeight="380">
