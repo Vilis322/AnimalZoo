@@ -241,11 +241,24 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
-    private void MakeSound()
+    // CHANGED: made async and added sound playback
+    private async void MakeSound()
     {
         if (SelectedAnimal is null) return;
+
         var sound = SelectedAnimal.MakeSound();
         LogEntries.Add($"{SelectedAnimal.Name}: {sound}");
+
+        try
+        {
+            var typeName = SelectedAnimal.GetType().Name;
+            await SoundService.PlayAnimalVoiceAsync(typeName);
+        }
+        catch (Exception ex)
+        {
+            // Show a non-fatal alert; message text will be localized later
+            AlertRequested?.Invoke($"Sound playback error: {ex.Message}");
+        }
     }
 
     private void Feed()
