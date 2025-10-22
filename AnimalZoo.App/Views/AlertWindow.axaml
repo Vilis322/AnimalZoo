@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="AnimalZoo.App.Views.AlertWindow"
-        Width="420" Height="160"
-        Title="Notice"
-        CanResize="False">
-    <Grid Margin="12" RowDefinitions="*,Auto">
-        <TextBlock x:Name="MessageText"
-                   TextWrapping="Wrap"
-                   FontSize="14"/>
-        <Button Grid.Row="1" Content="OK" HorizontalAlignment="Right" Width="80" Click="OnOk"/>
-    </Grid>
+<!--
+  Alert dialog that sizes itself to its content.
+  - Uses SizeToContent to fit message text.
+  - MaxWidth protects from extremely long lines; TextWrapping is enabled.
+-->
+<Window
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="AnimalZoo.App.Views.AlertWindow"
+    Title="Notice"
+    CanResize="False"
+    WindowStartupLocation="CenterOwner"
+    SizeToContent="WidthAndHeight"
+    MaxWidth="560">
+
+    <Border Padding="16">
+        <Grid RowDefinitions="Auto,Auto">
+            <TextBlock x:Name="MessageText"
+                       TextWrapping="Wrap"
+                       MaxWidth="520"
+                       Margin="0,0,0,12" />
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="OK" MinWidth="80" Click="OnOk"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>
