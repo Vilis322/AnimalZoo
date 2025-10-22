@@ -82,7 +82,7 @@ public abstract class Animal : INotifyPropertyChanged
     /// Human-readable display of current state.
     /// Marked virtual so derived types (e.g., Bird/Eagle/Parrot) can append flying state, etc.
     /// </summary>
-    public virtual string DisplayState => $"{GetType().Name} • {Name} • {Mood}";
+    public virtual string DisplayState => $"{GetType().Name} • {Mood}";
 
     /// <summary>
     /// Identifier string shown to users: "Name-Type - ID".
