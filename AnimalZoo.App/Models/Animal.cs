@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -11,8 +12,14 @@ namespace AnimalZoo.App.Models;
 public abstract class Animal : INotifyPropertyChanged
 {
     private string _name;
-    private double _age;                    // Fractional ages are supported (e.g., 2.6 years)
+    private double _age; // Fractional ages are supported (e.g., 2.6 years)
     private AnimalMood _mood = AnimalMood.Hungry;
+
+    /// <summary>
+    /// Stable unique identifier generated on construction.
+    /// Kept short to be user-friendly in lists.
+    /// </summary>
+    public string UniqueId { get; } = Guid.NewGuid().ToString("N")[..8];
 
     /// <summary>Name of the animal.</summary>
     public string Name
@@ -30,6 +37,7 @@ public abstract class Animal : INotifyPropertyChanged
                 _name = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(DisplayState));
+                OnPropertyChanged(nameof(Identifier));
             }
         }
     }
@@ -40,9 +48,8 @@ public abstract class Animal : INotifyPropertyChanged
         get => _age;
         set
         {
-            // Clamp to non-negative range; fractional ages are allowed.
-            var normalized = value < 0 ? 0 : value;
-            if (_age != normalized)
+            var normalized = value < 0 ? 0 : value; // clamp negatives
+            if (Math.Abs(_age - normalized) > double.Epsilon)
             {
                 _age = normalized;
                 OnPropertyChanged();
@@ -78,11 +85,15 @@ public abstract class Animal : INotifyPropertyChanged
     public virtual string DisplayState => $"{GetType().Name} • {Name} • {Mood}";
 
     /// <summary>
+    /// Identifier string shown to users: "Name-Type - ID".
+    /// </summary>
+    public string Identifier => $"{Name}-{GetType().Name} - {UniqueId}";
+
+    /// <summary>
     /// Base constructor. Uses property setters for consistent validation/notifications.
     /// </summary>
     protected Animal(string name, double age)
     {
-        // Initialize backing fields to safe defaults before using property setters.
         _name = "Unnamed";
         _age = 0;
 
@@ -99,11 +110,9 @@ public abstract class Animal : INotifyPropertyChanged
     /// Hook called every time the mood changes.
     /// Derived classes may override to enforce additional rules (e.g., auto-land on sleep).
     /// </summary>
-    /// <param name="newMood">The new mood set on this animal.</param>
     protected virtual void OnMoodChanged(AnimalMood newMood)
     {
         // Default: do nothing.
-        // Derived classes (Bird/Eagle/Parrot) override this to update their own state.
     }
 
     /// <summary>

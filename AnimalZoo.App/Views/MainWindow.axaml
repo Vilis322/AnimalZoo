@@ -51,6 +51,29 @@
     <StackPanel Grid.Row="1" Grid.Column="1" Margin="12" Spacing="10">
       <TextBlock Text="Details" FontWeight="SemiBold" />
 
+      <!-- NEW: toggle IDs panel -->
+      <Button Content="Show IDs" Command="{Binding ToggleIdListCommand}" HorizontalAlignment="Left"/>
+
+      <!-- NEW: IDs panel (scrollable, collapsible) -->
+      <Border IsVisible="{Binding IsIdListVisible}"
+              BorderBrush="#444" BorderThickness="1" CornerRadius="6"
+              Padding="8" Background="#101010" >
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Text="Animal IDs" FontWeight="SemiBold" Margin="0,0,0,6"/>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="180">
+            <ItemsControl ItemsSource="{Binding AnimalIds}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="2,4">
+                    <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+
       <!-- Animal image -->
       <Border Padding="6" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Margin="0,0,0,6">
         <Image Source="{Binding CurrentImage}"
@@ -179,4 +202,3 @@
                Text="Tips: Drop Food feeds all (guarded from double-click). Refresh Stats resets all to Hungry. Lists and stats are scrollable." />
   </Grid>
 </Window>
-

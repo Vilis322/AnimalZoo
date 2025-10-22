@@ -20,24 +20,24 @@ namespace AnimalZoo.App.ViewModels;
 /// <summary>Row for "By type" statistics table.</summary>
 public sealed class AnimalTypeStat
 {
-    /// <summary>Type name (e.g., Cat, Dog).</summary>
     public string Type { get; init; } = string.Empty;
-    /// <summary>Total animals of this type.</summary>
     public int Count { get; init; }
-    /// <summary>Average age across this type.</summary>
     public double AverageAge { get; init; }
 }
 
 /// <summary>
 /// Main view model with MVVM bindings, repository, enclosure usage,
-/// event-driven state machine per animal (Happy → Random(Night|Gaming) → Hungry),
-/// and LINQ statistics.
+/// state machine per animal (Happy → Night/Gaming → Hungry), LINQ stats,
+/// and a toggleable list of unique animal identifiers.
 /// </summary>
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
     // UI-visible collections
     public ObservableCollection<Animal> Animals { get; } = new();
     public ObservableCollection<string> LogEntries { get; } = new();
+
+    // NEW: list of "Name-Type - ID"
+    public ObservableCollection<string> AnimalIds { get; } = new();
 
     // Stats (table + lists)
     public ObservableCollection<AnimalTypeStat> ByTypeStats { get; } = new();
@@ -68,6 +68,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     // Feeding re-entrance guard
     private bool _isFeeding = false;
+
+    // NEW: ids panel visibility and command
+    private bool _isIdListVisible;
+    public bool IsIdListVisible
+    {
+        get => _isIdListVisible;
+        set { if (_isIdListVisible != value) { _isIdListVisible = value; OnPropertyChanged(); } }
+    }
+
+    public ICommand ToggleIdListCommand { get; }
 
     /// <summary>Currently selected animal.</summary>
     public Animal? SelectedAnimal
@@ -114,7 +124,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     }
 
     private IImage? _currentImage;
-    /// <summary>Current image for the selected animal and its mood.</summary>
     public IImage? CurrentImage
     {
         get => _currentImage;
@@ -134,11 +143,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public ICommand RefreshStatsCommand { get; }
 
     private readonly Random _random = new();
-
-    // Per-animal sequence cancellation
     private readonly Dictionary<Animal, CancellationTokenSource> _flows = new();
-
-    /// <summary>Raised when UI should show a modal alert.</summary>
     public event Action<string>? AlertRequested;
 
     public MainWindowViewModel()
@@ -152,7 +157,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         AddAnimal(dog);
         AddAnimal(bird);
 
-        // Enclosure event: neighbors react
         _enclosure.AnimalJoinedInSameEnclosure += OnAnimalJoinedInSameEnclosure;
         _enclosure.FoodDropped += (_, e) =>
             LogEntries.Add($"Food dropped at {e.When:T}. Feeding order will be displayed...");
@@ -169,22 +173,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         RemoveLogEntryByValueCommand  = new RelayCommand(RemoveLogEntryByValue);
         DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
-        
+
+        // NEW: toggle ID list
+        ToggleIdListCommand           = new RelayCommand(() => IsIdListVisible = !IsIdListVisible);
+
         HappyEvent   += a => LogEntries.Add($"{a.Name} is happy.");
         GamingEvent  += a => LogEntries.Add($"{a.Name} is gaming.");
         NightEvent   += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
         HungryEvent  += a => LogEntries.Add($"{a.Name} is hungry.");
 
+        // Build initial ID list for seeded animals.
+        RebuildIdList();
+
         UpdateStats();
     }
 
-    /// <summary>
-    /// Adds an animal to repository, enclosure and UI list.
-    /// Rejects animals without a valid name with a user-friendly alert.
-    /// </summary>
+    /// <summary>Adds an animal to repository, enclosure and UI list.</summary>
     public void AddAnimal(Animal animal)
     {
-        // --- Guard: do not allow unnamed animals ---
+        // name guard retained
         if (string.IsNullOrWhiteSpace(animal.Name) || animal.Name == "Unnamed")
         {
             AlertRequested?.Invoke("Unable to create an animal without a name. Please enter the animal's name!");
@@ -194,6 +201,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _repo.Add(animal);
         _enclosure.Add(animal);
         Animals.Add(animal);
+
+        // NEW: track identifier
+        AnimalIds.Add(animal.Identifier);
+
         LogEntries.Add($"Added {animal.Name} ({animal.GetType().Name}).");
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -208,6 +219,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _repo.Remove(SelectedAnimal);
         _enclosure.Remove(SelectedAnimal);
         Animals.Remove(SelectedAnimal);
+
+        // NEW: remove from ID list
+        var toRemoveId = SelectedAnimal.Identifier;
+        var idIndex = AnimalIds.IndexOf(toRemoveId);
+        if (idIndex >= 0) AnimalIds.RemoveAt(idIndex);
 
         SelectedAnimal = Animals.FirstOrDefault();
         LogEntries.Add($"Removed {name}.");
@@ -245,7 +261,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (SelectedAnimal is null) return;
 
-        // Unified rule: sleeping animals cannot perform crazy actions
         if (SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
             AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot perform a crazy action now.");
@@ -258,7 +273,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (!string.IsNullOrWhiteSpace(text))
             {
                 LogEntries.Add(text);
-                AlertRequested?.Invoke(text); // also show alert
+                AlertRequested?.Invoke(text);
             }
         }
         else
@@ -312,7 +327,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private async Task DropFoodAsync()
     {
-        if (_isFeeding) return; // safety double-click guard
+        if (_isFeeding) return;
 
         _isFeeding = true;
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -353,10 +368,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     // ---- Event-driven sequence per animal ----
 
-    /// <summary>
-    /// Start: Happy (5s) → Random: Night(Sleeping 10s) or Gaming(10s) → Hungry (stop).
-    /// Cancels any prior flow for that animal.
-    /// </summary>
     private void StartPostFeedSequence(Animal animal)
     {
         CancelFlow(animal);
@@ -370,13 +381,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
-            // Happy phase
             animal.SetMood(AnimalMood.Happy);
             HappyEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
             await Task.Delay(HappyDuration, token);
 
-            // Random next: Night (Sleeping) OR Gaming
             var nextIsNight = _random.Next(2) == 0;
 
             if (nextIsNight)
@@ -394,7 +403,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 await Task.Delay(NextPhaseDuration, token);
             }
 
-            // End at Hungry and stop (log via HungryEvent)
             animal.SetMood(AnimalMood.Hungry);
             HungryEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
@@ -417,8 +425,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    // --- Enclosure neighbor reactions ---
-
     private void OnAnimalJoinedInSameEnclosure(object? sender, AnimalJoinedEventArgs e)
     {
         foreach (var resident in e.CurrentResidents)
@@ -428,8 +434,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 LogEntries.Add(reaction);
         }
     }
-
-    // --- Image handling ---
 
     private void OnSelectedAnimalPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -478,8 +482,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         CurrentImage = null;
     }
 
-    // --- LINQ Stats & reset ---
-
     private void UpdateStats()
     {
         ByTypeStats.Clear();
@@ -512,10 +514,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         OldestStat = $"{oldest.Name} ({oldest.GetType().Name}, {oldest.Age}y)";
     }
 
-    /// <summary>
-    /// Reset all animals to Hungry, cancel all flows, refresh stats and image.
-    /// Used by Refresh Stats per assignment.
-    /// </summary>
     private void ResetAllToHungryAndRefresh()
     {
         foreach (var a in Animals.ToList())
@@ -527,8 +525,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         UpdateStats();
         LogEntries.Add("All animals reset to Hungry (via Refresh Stats).");
     }
-
-    // --- Log management ---
 
     private void ClearLog()
     {
@@ -546,6 +542,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             LogEntries.Remove(toRemove);
             SelectedLogEntry = LogEntries.LastOrDefault();
         }
+    }
+
+    // --- IDs support ---
+
+    /// <summary>Rebuilds the identifier list from current animals.</summary>
+    private void RebuildIdList()
+    {
+        AnimalIds.Clear();
+        foreach (var a in Animals)
+            AnimalIds.Add(a.Identifier);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
