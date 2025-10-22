@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using AnimalZoo.App.Interfaces;
+using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Models;
 
@@ -12,9 +13,9 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
     /// <summary>Whether the bird is currently flying.</summary>
     public bool IsFlying { get; private set; }
 
-    /// <summary>Show both mood and flying state.</summary>
+    /// <summary>Show both mood and flying state (localized).</summary>
     public override string DisplayState
-        => $"{base.DisplayState} • {(IsFlying ? "Flying" : "Perched")}";
+        => $"{base.DisplayState} • {AnimalText.FlyingState(IsFlying)}";
 
     /// <summary>Create a Bird with fractional age support.</summary>
     public Bird(string name, double age) : base(name, age)
@@ -43,12 +44,12 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
     public string ActCrazy(List<Animal> allAnimals)
     {
         if (Mood == AnimalMood.Sleeping)
-            return $"{Name} is sleeping and cannot fly now.";
+            return string.Format(AnimalZoo.App.Localization.Loc.Instance["Bird.Crazy.SleepingNoFly"], Name);
 
         ToggleFly();
         return IsFlying
-            ? $"{Name} is now FLYING and screams 'CHIRP!!!'"
-            : $"{Name} lands gracefully.";
+            ? string.Format(Loc.Instance["Bird.Crazy.Flying"], Name)
+            : string.Format(Loc.Instance["Bird.Crazy.Landing"], Name);
     }
 
     /// <summary>Force landing when falling asleep.</summary>
@@ -62,5 +63,5 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
     }
 
     public override string OnNeighborJoined(Animal newcomer)
-        => $"{Name} chirps at {newcomer.Name}.";
+        => string.Format(Loc.Instance["Bird.Neighbor"], Name, newcomer.Name);
 }

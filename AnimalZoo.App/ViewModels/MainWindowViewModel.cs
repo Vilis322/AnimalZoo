@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using AnimalZoo.App.Interfaces;
+using AnimalZoo.App.Localization;
 using AnimalZoo.App.Models;
 using AnimalZoo.App.Repositories;
 using AnimalZoo.App.Utils;
@@ -21,7 +22,7 @@ namespace AnimalZoo.App.ViewModels;
 /// <summary>Row for "By type" statistics table.</summary>
 public sealed class AnimalTypeStat
 {
-    /// <summary>Type name (e.g., Cat, Dog).</summary>
+    /// <summary>Type name (localized).</summary>
     public string Type { get; init; } = string.Empty;
     /// <summary>Total animals of this type.</summary>
     public int Count { get; init; }
@@ -30,17 +31,17 @@ public sealed class AnimalTypeStat
 }
 
 /// <summary>
-/// Main view model with MVVM bindings, repository, enclosure usage,
-/// state machine per animal (Happy → Night/Gaming → Hungry), LINQ stats,
-/// toggleable list of unique animal identifiers, and image state handling.
+/// Main view model: animals list, actions, log, images, and LINQ stats.
+/// This version wires localization for headers, logs, states and age suffix.
 /// </summary>
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
+    // --- Localization service ---
+    private readonly ILocalizationService _loc = Loc.Instance;
+
     // UI-visible collections
     public ObservableCollection<Animal> Animals { get; } = new();
     public ObservableCollection<string> LogEntries { get; } = new();
-
-    // IDs list (Name-Type - ID)
     public ObservableCollection<string> AnimalIds { get; } = new();
 
     // Stats (table + lists)
@@ -53,11 +54,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         private set { if (_oldestStat != value) { _oldestStat = value; OnPropertyChanged(); } }
     }
 
-    // Repository and enclosure
+    // Repo + enclosure
     private readonly IRepository<Animal> _repo = new InMemoryRepository<Animal>();
     private readonly Enclosure<Animal> _enclosure = new();
 
-    // Event-driven states
+    // Timeline events
     public event Action<Animal>? HappyEvent;
     public event Action<Animal>? GamingEvent;
     public event Action<Animal>? NightEvent;
@@ -70,10 +71,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private Animal? _selectedAnimal;
     private Animal? _subscribedAnimal;
 
-    // Feeding re-entrance guard
-    private bool _isFeeding = false;
+    // Feeding guard
+    private bool _isFeeding;
 
-    // ID list panel visibility
+    // IDs panel visibility
     private bool _isIdListVisible;
     public bool IsIdListVisible
     {
@@ -83,7 +84,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public ICommand ToggleIdListCommand { get; }
 
-    /// <summary>Currently selected animal.</summary>
+    /// <summary>Selected animal.</summary>
     public Animal? SelectedAnimal
     {
         get => _selectedAnimal;
@@ -102,6 +103,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     _subscribedAnimal.PropertyChanged += OnSelectedAnimalPropertyChanged;
 
                 UpdateCurrentImage();
+                OnPropertyChanged(nameof(SelectedAnimalStateL10n));
 
                 (MakeSoundCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (FeedCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -146,18 +148,61 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public ICommand RemoveLogEntryByValueCommand { get; }
     public ICommand DropFoodCommand { get; }
     public ICommand RefreshStatsCommand { get; }
+    public ICommand ChangeLanguageCommand { get; }
 
     private readonly Random _random = new();
-
-    // Per-animal sequence cancellation
     private readonly Dictionary<Animal, CancellationTokenSource> _flows = new();
 
-    /// <summary>Raised when UI should show a modal alert.</summary>
+    /// <summary>UI should display this alert text in a modal.</summary>
     public event Action<string>? AlertRequested;
+
+    // Headers proxy (Type/Count/AverageAge)
+    public LabelsProxy Labels { get; }
 
     public MainWindowViewModel()
     {
-        // Seed data
+        Labels = new LabelsProxy(_loc);
+
+        // Subscribe language changes
+        _loc.LanguageChanged += () =>
+        {
+            // Simple labels/buttons
+            OnPropertyChanged(nameof(TextMakeSound));
+            OnPropertyChanged(nameof(TextFeed));
+            OnPropertyChanged(nameof(TextCrazyAction));
+            OnPropertyChanged(nameof(TextToggleFly));
+            OnPropertyChanged(nameof(TextClearLog));
+            OnPropertyChanged(nameof(TextDropFood));
+            OnPropertyChanged(nameof(TextRefreshStats));
+            OnPropertyChanged(nameof(TextToggleIds));
+            OnPropertyChanged(nameof(TextLanguageButton));
+            OnPropertyChanged(nameof(TextFoodLabel));
+
+            OnPropertyChanged(nameof(TextAnimalsHeader));
+            OnPropertyChanged(nameof(TextDetailsHeader));
+            OnPropertyChanged(nameof(TextAnimalIdsHeader));
+            OnPropertyChanged(nameof(TextNameColon));
+            OnPropertyChanged(nameof(TextAgeColon));
+            OnPropertyChanged(nameof(TextStateColon));
+            OnPropertyChanged(nameof(TextAddAnimal));
+            OnPropertyChanged(nameof(TextRemoveAnimal));
+            OnPropertyChanged(nameof(TextDropFoodFull));
+            OnPropertyChanged(nameof(TextRefreshStatsFull));
+            OnPropertyChanged(nameof(TextLogHeader));
+            OnPropertyChanged(nameof(TextDeleteSelected));
+            OnPropertyChanged(nameof(TextStatsHeader));
+            OnPropertyChanged(nameof(TextHungryHeader));
+            OnPropertyChanged(nameof(TextOldestHeader));
+            OnPropertyChanged(nameof(TextFooterTips));
+            OnPropertyChanged(nameof(TextAgeListSuffix));
+
+            OnPropertyChanged(nameof(SelectedAnimalStateL10n));
+
+            Labels.RaiseAllChanged();
+            UpdateStats();
+        };
+
+        // Seed demo
         var cat = new Cat("Murr", 3);
         var dog = new Dog("Rex", 5);
         var bird = new Bird("Kiwi", 1);
@@ -166,10 +211,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         AddAnimal(dog);
         AddAnimal(bird);
 
-        // Enclosure event: neighbors react
+        // Enclosure events
         _enclosure.AnimalJoinedInSameEnclosure += OnAnimalJoinedInSameEnclosure;
         _enclosure.FoodDropped += (_, e) =>
-            LogEntries.Add($"Food dropped at {e.When:T}. Feeding order will be displayed...");
+            LogEntries.Add(string.Format(_loc["Log.FoodDropped"], e.When.ToShortTimeString()));
 
         SelectedAnimal = Animals.FirstOrDefault();
 
@@ -184,25 +229,81 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
         ToggleIdListCommand           = new RelayCommand(() => IsIdListVisible = !IsIdListVisible);
+        ChangeLanguageCommand         = new RelayCommand(CycleLanguage);
 
-        HappyEvent   += a => LogEntries.Add($"{a.Name} is happy.");
-        GamingEvent  += a => LogEntries.Add($"{a.Name} is gaming.");
-        NightEvent   += a => LogEntries.Add($"{a.Name} fell asleep for the night.");
-        HungryEvent  += a => LogEntries.Add($"{a.Name} is hungry.");
+        // Localized timeline logs
+        HappyEvent   += a => LogEntries.Add(string.Format(_loc["Log.Happy"], a.Name));
+        GamingEvent  += a => LogEntries.Add(string.Format(_loc["Log.Gaming"], a.Name));
+        NightEvent   += a => LogEntries.Add(string.Format(_loc["Log.Night"], a.Name));
+        HungryEvent  += a => LogEntries.Add(string.Format(_loc["Log.Hungry"], a.Name));
 
-        // Build initial ID list
         RebuildIdList();
-
         UpdateStats();
     }
 
-    /// <summary>Adds an animal to repository, enclosure and UI list.</summary>
+    // --- Localized UI text (bind to these from XAML) ---
+    public string TextMakeSound        => _loc["Buttons.MakeSound"];
+    public string TextFeed             => _loc["Buttons.Feed"];
+    public string TextCrazyAction      => _loc["Buttons.CrazyAction"];
+    public string TextToggleFly        => _loc["Buttons.ToggleFly"];
+    public string TextClearLog         => _loc["Buttons.ClearLog"];
+    public string TextDropFood         => _loc["Buttons.DropFood"];
+    public string TextRefreshStats     => _loc["Buttons.RefreshStats"];
+    public string TextToggleIds        => _loc["Buttons.ToggleIds"];
+    public string TextLanguageButton   => _loc["Buttons.Language"];
+    public string TextFoodLabel        => _loc["Labels.Food"];
+
+    public string TextAnimalsHeader    => _loc["Headers.Animals"];
+    public string TextDetailsHeader    => _loc["Headers.Details"];
+    public string TextAnimalIdsHeader  => _loc["Headers.AnimalIds"];
+    public string TextNameColon        => _loc["Labels.Name"] + ":";
+    public string TextAgeColon         => _loc["Labels.Age"] + ":";
+    public string TextStateColon       => _loc["Labels.State"] + ":";
+
+    public string TextAddAnimal        => _loc["Buttons.AddAnimal"];
+    public string TextRemoveAnimal     => _loc["Buttons.RemoveAnimal"];
+    public string TextDropFoodFull     => _loc["Buttons.DropFoodFull"];
+    public string TextRefreshStatsFull => _loc["Buttons.RefreshStatsFull"];
+
+    public string TextLogHeader        => _loc["Headers.Log"];
+    public string TextDeleteSelected   => _loc["Buttons.DeleteSelected"];
+    public string TextStatsHeader      => _loc["Headers.Stats"];
+    public string TextHungryHeader     => _loc["Headers.HungryList"];
+    public string TextOldestHeader     => _loc["Headers.Oldest"];
+    public string TextFooterTips       => _loc["Footer.Tips"];
+
+    /// <summary>Localized suffix for the animals list "( N y.o.)" part.</summary>
+    public string TextAgeListSuffix    => _loc["List.AgeSuffixList"];
+
+    /// <summary>Localized state of the selected animal.</summary>
+    public string SelectedAnimalStateL10n
+    {
+        get
+        {
+            if (SelectedAnimal is null) return string.Empty;
+            var mood = LocalizeMood(SelectedAnimal.Mood);
+            return $"{SelectedAnimal.Name} • {mood}";
+        }
+    }
+
+    /// <summary>Cycle language: ENG → RU → EST → ENG.</summary>
+    private void CycleLanguage()
+    {
+        var next = _loc.CurrentLanguage switch
+        {
+            Language.ENG => Language.RU,
+            Language.RU  => Language.EST,
+            _            => Language.ENG
+        };
+        _loc.SetLanguage(next);
+    }
+
+    /// <summary>Add an animal to all storages and log.</summary>
     public void AddAnimal(Animal animal)
     {
-        // Guard: name must be specified
         if (string.IsNullOrWhiteSpace(animal.Name) || animal.Name == "Unnamed")
         {
-            AlertRequested?.Invoke("Unable to create an animal without a name. Please enter the animal's name!");
+            AlertRequested?.Invoke(_loc["Alerts.NameMissing"]);
             return;
         }
 
@@ -210,10 +311,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _enclosure.Add(animal);
         Animals.Add(animal);
 
-        // Track identifier string
         AnimalIds.Add(animal.Identifier);
 
-        LogEntries.Add($"Added {animal.Name} ({animal.GetType().Name}).");
+        var typeName = LocalizeAnimalType(animal.GetType().Name);
+        LogEntries.Add(string.Format(_loc["Log.Added"], animal.Name, typeName));
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
@@ -227,21 +328,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _repo.Remove(SelectedAnimal);
         _enclosure.Remove(SelectedAnimal);
 
-        // remove ID before clearing SelectedAnimal
         var idStr = SelectedAnimal.Identifier;
-
         Animals.Remove(SelectedAnimal);
-
         var idx = AnimalIds.IndexOf(idStr);
         if (idx >= 0) AnimalIds.RemoveAt(idx);
 
         SelectedAnimal = Animals.FirstOrDefault();
-        LogEntries.Add($"Removed {name}.");
+        LogEntries.Add(string.Format(_loc["Log.Removed"], name));
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
 
-    // CHANGED: made async and added sound playback
     private async void MakeSound()
     {
         if (SelectedAnimal is null) return;
@@ -256,8 +353,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            // Show a non-fatal alert; message text will be localized later
-            AlertRequested?.Invoke($"Sound playback error: {ex.Message}");
+            AlertRequested?.Invoke(string.Format(_loc["Alerts.SoundError"], ex.Message));
         }
     }
 
@@ -267,12 +363,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (SelectedAnimal.Mood != AnimalMood.Hungry)
         {
-            AlertRequested?.Invoke("You have already fed the animal and it is not hungry now.");
+            AlertRequested?.Invoke(_loc["Alerts.AlreadyFed"]);
             return;
         }
 
-        var food = string.IsNullOrWhiteSpace(FoodInput) ? "food" : FoodInput.Trim();
-        LogEntries.Add($"{SelectedAnimal.Name} ate {food}.");
+        var food = string.IsNullOrWhiteSpace(FoodInput) ? _loc["Labels.Food"].ToLowerInvariant() : FoodInput.Trim();
+        LogEntries.Add(string.Format(_loc["Log.AteFood"], SelectedAnimal.Name, food));
         FoodInput = string.Empty;
 
         StartPostFeedSequence(SelectedAnimal);
@@ -284,10 +380,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (SelectedAnimal is null) return;
 
-        // Unified rule: sleeping animals cannot perform crazy actions
         if (SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
-            AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot perform a crazy action now.");
+            AlertRequested?.Invoke(string.Format(_loc["Alerts.SleepingNoCrazy"], SelectedAnimal.Name));
             return;
         }
 
@@ -296,13 +391,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             var text = actor.ActCrazy(Animals.ToList());
             if (!string.IsNullOrWhiteSpace(text))
             {
-                LogEntries.Add(text);
-                AlertRequested?.Invoke(text); // show alert as well
+                LogEntries.Add(text);   // animals already return localized strings
+                AlertRequested?.Invoke(text);
             }
         }
         else
         {
-            var msg = $"{SelectedAnimal.Name} has nothing crazy to do.";
+            var msg = string.Format(_loc["Alerts.NothingCrazy"], SelectedAnimal.Name);
             LogEntries.Add(msg);
             AlertRequested?.Invoke(msg);
         }
@@ -314,14 +409,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (SelectedAnimal is null) return;
 
-        // If a flyable animal is sleeping, it cannot fly
         if (SelectedAnimal is Flyable && SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
-            AlertRequested?.Invoke($"{SelectedAnimal.Name} is sleeping and cannot fly now.");
+            AlertRequested?.Invoke(string.Format(_loc["Alerts.SleepingNoFly"], SelectedAnimal.Name));
             return;
         }
 
-        // Use existing APIs to toggle flight
         switch (SelectedAnimal)
         {
             case Bird b:
@@ -329,9 +422,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     var wasFlying = b.IsFlying;
                     b.ToggleFly();
                     if (b.IsFlying && !wasFlying)
-                        LogEntries.Add($"{b.Name} took off and shouts 'CHIRP!!!'");
+                        LogEntries.Add(string.Format(_loc["Log.BirdTakeOff"], b.Name));
                     else if (!b.IsFlying && wasFlying)
-                        LogEntries.Add($"{b.Name} landed.");
+                        LogEntries.Add(string.Format(_loc["Log.BirdLand"], b.Name));
                     break;
                 }
             case Eagle e:
@@ -339,24 +432,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     var wasFlying = e.IsFlying;
                     e.ToggleFly();
                     if (e.IsFlying && !wasFlying)
-                        LogEntries.Add($"{e.Name} soars into the sky with a mighty screech!");
+                        LogEntries.Add(string.Format(_loc["Log.EagleTakeOff"], e.Name));
                     else if (!e.IsFlying && wasFlying)
-                        LogEntries.Add($"{e.Name} folds its wings and perches.");
+                        LogEntries.Add(string.Format(_loc["Log.EagleLand"], e.Name));
                     break;
                 }
             case Parrot p:
                 {
                     var wasFlying = p.IsFlying;
-                    p.Fly(); // toggle
+                    p.Fly();
                     if (p.IsFlying && !wasFlying)
-                        LogEntries.Add($"{p.Name} is now FLYING and screams 'CHIRP!!!'");
+                        LogEntries.Add(string.Format(_loc["Log.ParrotFly"], p.Name));
                     else if (!p.IsFlying && wasFlying)
-                        LogEntries.Add($"{p.Name} lands gracefully.");
+                        LogEntries.Add(string.Format(_loc["Log.ParrotLand"], p.Name));
                     break;
                 }
             case Flyable f:
                 {
-                    // Generic fallback
                     f.Fly();
                     break;
                 }
@@ -367,12 +459,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private async Task DropFoodAsync()
     {
-        if (_isFeeding) return; // safety double-click guard
+        if (_isFeeding) return;
 
         _isFeeding = true;
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
 
-        AlertRequested?.Invoke("Feeding started. Watch the log for the order and progress.");
+        AlertRequested?.Invoke(_loc["Alerts.FeedingStarted"]);
         try
         {
             await _enclosure.DropFoodAsync(
@@ -386,16 +478,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     }
                     else
                     {
-                        LogEntries.Add($"{animal.Name} was not hungry and ignored the food.");
+                        LogEntries.Add(string.Format(_loc["Log.IgnoredFood"], animal.Name));
                     }
                 }
             );
-            AlertRequested?.Invoke("Feeding finished.");
+            AlertRequested?.Invoke(_loc["Alerts.FeedingFinished"]);
         }
-        catch (Exception ex)
+        catch
         {
-            LogEntries.Add($"Feeding error: {ex.Message}");
-            AlertRequested?.Invoke("Feeding failed. See log for details.");
+            AlertRequested?.Invoke(_loc["Alerts.FeedingFailed"]);
         }
         finally
         {
@@ -406,18 +497,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         UpdateStats();
     }
 
-    // ---- Event-driven sequence per animal ----
-
-    /// <summary>
-    /// Start: Happy (5s) → Random: Night(Sleeping 10s) or Gaming(10s) → Hungry (stop).
-    /// Cancels any prior flow for that animal.
-    /// </summary>
+    // --- Post-feed sequence ---
     private void StartPostFeedSequence(Animal animal)
     {
         CancelFlow(animal);
         var cts = new CancellationTokenSource();
         _flows[animal] = cts;
-
         _ = RunSequenceAsync(animal, cts.Token);
     }
 
@@ -425,13 +510,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
-            // Happy phase
             animal.SetMood(AnimalMood.Happy);
             HappyEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
             await Task.Delay(HappyDuration, token);
 
-            // Random next: Night (Sleeping) OR Gaming
             var nextIsNight = _random.Next(2) == 0;
 
             if (nextIsNight)
@@ -449,17 +532,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 await Task.Delay(NextPhaseDuration, token);
             }
 
-            // End at Hungry and stop
             animal.SetMood(AnimalMood.Hungry);
             HungryEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
 
             CancelFlow(animal);
         }
-        catch (TaskCanceledException)
-        {
-            // interrupted — do nothing
-        }
+        catch (TaskCanceledException) { }
     }
 
     private void CancelFlow(Animal animal)
@@ -483,28 +562,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     }
 
     // --- Image handling ---
-
     private void OnSelectedAnimalPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Animal.DisplayState) || e.PropertyName == nameof(Animal.Mood) || e.PropertyName == nameof(Animal.Name))
+        if (e.PropertyName == nameof(Animal.DisplayState) ||
+            e.PropertyName == nameof(Animal.Mood) ||
+            e.PropertyName == nameof(Animal.Name))
         {
             UpdateCurrentImage();
             UpdateStats();
+            OnPropertyChanged(nameof(SelectedAnimalStateL10n));
         }
     }
 
-    /// <summary>
-    /// Returns true if the given animal implements Flyable and exposes a boolean property named "IsFlying" that is true.
-    /// This keeps the image selection logic generic for any future Flyable animals without changing interfaces.
-    /// </summary>
     private static bool IsAnimalFlying(Animal a)
     {
         if (a is not Flyable) return false;
-
-        // Look for a readable bool property "IsFlying"
         var prop = a.GetType().GetProperty("IsFlying", BindingFlags.Public | BindingFlags.Instance);
         if (prop is null || prop.PropertyType != typeof(bool) || !prop.CanRead) return false;
-
         var value = prop.GetValue(a);
         return value is bool b && b;
     }
@@ -522,15 +596,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         var exts = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" };
 
         var names = new List<string>();
-
-        // Generic: if the animal is Flyable and currently flying, prefer flying assets
         if (IsAnimalFlying(SelectedAnimal))
         {
             names.Add($"flying_{mood}");
             names.Add("flying");
         }
-
-        // Fallback: mood-based assets
         names.Add(mood);
 
         foreach (var name in names)
@@ -550,8 +620,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         CurrentImage = null;
     }
 
-    // --- LINQ Stats & reset ---
-
+    // --- LINQ Stats ---
     private void UpdateStats()
     {
         ByTypeStats.Clear();
@@ -564,42 +633,32 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         foreach (var row in animals
             .GroupBy(a => a.GetType().Name)
             .OrderBy(g => g.Key)
-            .Select(g => new AnimalTypeStat { Type = g.Key, Count = g.Count(), AverageAge = g.Average(a => a.Age) }))
+            .Select(g => new AnimalTypeStat
+            {
+                Type = LocalizeAnimalType(g.Key),
+                Count = g.Count(),
+                AverageAge = g.Average(a => a.Age)
+            }))
         {
             ByTypeStats.Add(row);
         }
 
+        var yearsShort = _loc["Labels.YearsShort"];
+
         foreach (var s in animals
             .Where(a => a.Mood == AnimalMood.Hungry)
             .OrderByDescending(a => a.Age)
-            .Select(a => $"{a.Name} ({a.GetType().Name}, {a.Age}y)"))
+            .Select(a => $"{a.Name} ({LocalizeAnimalType(a.GetType().Name)}, {a.Age}{yearsShort})"))
         {
             HungryStats.Add(s);
         }
 
         if (HungryStats.Count == 0)
-            HungryStats.Add("No animals are hungry right now.");
+            HungryStats.Add(_loc["Stats.NoHungry"]);
 
         var oldest = animals.OrderByDescending(a => a.Age).First();
-        OldestStat = $"{oldest.Name} ({oldest.GetType().Name}, {oldest.Age}y)";
+        OldestStat = $"{oldest.Name} ({LocalizeAnimalType(oldest.GetType().Name)}, {oldest.Age}{yearsShort})";
     }
-
-    /// <summary>
-    /// Reset all animals to Hungry, cancel all flows, refresh stats and image.
-    /// </summary>
-    private void ResetAllToHungryAndRefresh()
-    {
-        foreach (var a in Animals.ToList())
-        {
-            CancelFlow(a);
-            a.SetMood(AnimalMood.Hungry);
-        }
-        UpdateCurrentImage();
-        UpdateStats();
-        LogEntries.Add("All animals reset to Hungry (via Refresh Stats).");
-    }
-
-    // --- Log management ---
 
     private void ClearLog()
     {
@@ -619,12 +678,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    // --- IDs support ---
-
-    /// <summary>
-    /// Rebuilds the identifier list from current animals.
-    /// Keeps UI IDs list in sync when called (e.g., after seeding).
-    /// </summary>
     private void RebuildIdList()
     {
         AnimalIds.Clear();
@@ -632,7 +685,71 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             AnimalIds.Add(a.Identifier);
     }
 
+    // Helpers
+    private string LocalizeMood(AnimalMood mood) => _loc[$"Mood.{mood}"];
+    private string LocalizeAnimalType(string typeName) => _loc[$"AnimalType.{typeName}"];
+
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? prop = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+
+    /// <summary>
+    /// Labels proxy so XAML can bind to localized column headers.
+    /// Implements INotifyPropertyChanged to refresh on language switch.
+    /// </summary>
+    public sealed class LabelsProxy : INotifyPropertyChanged
+    {
+        private readonly ILocalizationService _loc;
+        public LabelsProxy(ILocalizationService loc) => _loc = loc;
+
+        public string Type => _loc["Labels.Type"];
+        public string Count => _loc["Labels.Count"];
+        public string AverageAge => _loc["Labels.AverageAge"];
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        internal void RaiseAllChanged()
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Type)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AverageAge)));
+        }
+    }
+
+    /// <summary>
+    /// Resets all animals to Hungry, stops their running sequences,
+    /// forces flying animals to land (if applicable), updates image/stats,
+    /// and writes a localized log entry.
+    /// </summary>
+    private void ResetAllToHungryAndRefresh()
+    {
+        foreach (var a in Animals.ToList())
+        {
+            // Stop any running state machine
+            CancelFlow(a);
+
+            // Force land for flyables if they expose IsFlying/land operations
+            if (a is Flyable)
+            {
+                var type = a.GetType();
+                var isFlyingProp = type.GetProperty("IsFlying", BindingFlags.Public | BindingFlags.Instance);
+                var landMethod = type.GetMethod("Land", BindingFlags.Public | BindingFlags.Instance);
+
+                if (isFlyingProp is not null && landMethod is not null)
+                {
+                    var isFlying = isFlyingProp.GetValue(a) as bool? ?? false;
+                    if (isFlying) landMethod.Invoke(a, null);
+                }
+            }
+
+            a.SetMood(AnimalMood.Hungry);
+        }
+
+        LogEntries.Add(_loc["Log.ResetAllHungry"]);
+
+        if (SelectedAnimal is not null)
+            UpdateCurrentImage();
+
+        UpdateStats();
+    }
 }

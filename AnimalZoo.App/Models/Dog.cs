@@ -1,4 +1,5 @@
 using AnimalZoo.App.Interfaces;
+using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Models;
 
@@ -11,8 +12,8 @@ public sealed class Dog : Animal, ICrazyAction
     public override string MakeSound() => "Woof!";
 
     public string ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
-        => $"{Name}: " + string.Concat(System.Linq.Enumerable.Repeat("Woof! ", 5)).TrimEnd();
+        => string.Format(Loc.Instance["Dog.Crazy.MultiWoof"], Name);
 
     public override string OnNeighborJoined(Animal newcomer)
-        => $"{Name} happily wags tail at {newcomer.Name}.";
+        => string.Format(Loc.Instance["Dog.Neighbor"], Name, newcomer.Name);
 }

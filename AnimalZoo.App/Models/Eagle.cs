@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using AnimalZoo.App.Interfaces;
+using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Models;
 
@@ -13,54 +14,41 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     public bool IsFlying { get; private set; }
 
     /// <inheritdoc />
-    public override string DisplayState => $"{base.DisplayState} • {(IsFlying ? "Flying" : "Perched")}";
+    public override string DisplayState => $"{base.DisplayState} • {AnimalText.FlyingState(IsFlying)}";
 
     /// <summary>Create an Eagle with fractional age support.</summary>
-    public Eagle(string name, double age) : base(name, age)
-    {
-        IsFlying = false;
-    }
+    public Eagle(string name, double age) : base(name, age) { IsFlying = false; }
 
     /// <summary>Backward-compatible ctor (int age).</summary>
-    public Eagle(string name, int age) : base(name, age)
-    {
-        IsFlying = false;
-    }
+    public Eagle(string name, int age) : base(name, age) { IsFlying = false; }
 
     /// <inheritdoc />
     public override string MakeSound() => "Screech!";
 
-    /// <summary>
-    /// Toggle flight (disabled while sleeping).
-    /// </summary>
+    /// <summary>Toggle flight (disabled while sleeping).</summary>
     public void ToggleFly()
     {
         if (Mood == AnimalMood.Sleeping) return;
         IsFlying = !IsFlying;
-        // notify DisplayState changed
         base.OnPropertyChanged(nameof(DisplayState));
     }
 
     /// <inheritdoc />
     public void Fly() => ToggleFly();
 
-    /// <summary>
-    /// Crazy action: perform a dramatic takeoff/landing unless sleeping.
-    /// </summary>
+    /// <summary>Crazy action: dramatic takeoff/landing unless sleeping.</summary>
     public string ActCrazy(List<Animal> allAnimals)
     {
         if (Mood == AnimalMood.Sleeping)
-            return $"{Name} is sleeping and cannot fly now.";
+            return string.Format(Loc.Instance["Eagle.Crazy.SleepingNoFly"], Name);
 
         ToggleFly();
         return IsFlying
-            ? $"{Name} soars into the sky with a mighty screech!"
-            : $"{Name} folds its wings and perches.";
+            ? string.Format(Loc.Instance["Eagle.Crazy.Flying"], Name)
+            : string.Format(Loc.Instance["Eagle.Crazy.Landing"], Name);
     }
 
-    /// <summary>
-    /// Land automatically when going to Sleeping.
-    /// </summary>
+    /// <summary>Land automatically when going to Sleeping.</summary>
     protected override void OnMoodChanged(AnimalMood newMood)
     {
         if (newMood == AnimalMood.Sleeping && IsFlying)
@@ -70,14 +58,11 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
         }
     }
 
-    /// <summary>
-    /// Reaction to a newcomer in the same enclosure.
-    /// </summary>
+    /// <summary>Reaction to a newcomer in the same enclosure.</summary>
     public override string OnNeighborJoined(Animal newcomer)
     {
-        // Slightly different reaction to other birds vs other animals.
         return newcomer is Bird
-            ? $"{Name} spreads wings and asserts dominance over {newcomer.Name}."
-            : $"{Name} watches {newcomer.Name} from above with a piercing look.";
+            ? string.Format(Loc.Instance["Eagle.Neighbor.Bird"], Name, newcomer.Name)
+            : string.Format(Loc.Instance["Eagle.Neighbor.Other"], Name, newcomer.Name);
     }
 }

@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:AnimalZoo.App.ViewModels"
         x:Class="AnimalZoo.App.Views.AddAnimalWindow"
         Width="420" Height="260"
-        Title="Add Animal"
+        Title="{Binding TextDialogTitle}"
         CanResize="False"
         mc:Ignorable="d">
 
@@ -16,20 +16,33 @@
 
   <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
     <TextBlock Margin="12" FontSize="18" FontWeight="SemiBold"
-               Text="Create a new animal" />
+               Text="{Binding TextCreateHeading}" />
 
-    <Grid Grid.Row="1" Margin="12" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-      <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Name:"/>
-      <TextBox   Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Name, Mode=TwoWay}" Width="260" />
+    <Grid Grid.Row="1" Margin="12"
+          RowDefinitions="Auto,Auto,Auto"
+          ColumnDefinitions="Auto,8,*">
+      <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
+                 Text="{Binding TextNameLabel}"/>
+      <TextBox   Grid.Row="0" Grid.Column="2" Margin="0,0,0,8"
+                 Text="{Binding Name, Mode=TwoWay}"
+                 MinWidth="200"
+                 HorizontalAlignment="Stretch" />
 
-      <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Age:"/>
-      <NumericUpDown Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Value="{Binding Age, Mode=TwoWay}" Minimum="0" Maximum="100" Width="120"/>
+      <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
+                 Text="{Binding TextAgeLabel}"/>
+      <NumericUpDown Grid.Row="1" Grid.Column="2" Margin="0,0,0,8"
+                     Value="{Binding Age, Mode=TwoWay}"
+                     Minimum="0" Maximum="100"
+                     MinWidth="120"
+                     HorizontalAlignment="Left"/>
 
-      <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Type:"/>
-      <ComboBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,8"
+      <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
+                 Text="{Binding TextTypeLabel}"/>
+      <ComboBox Grid.Row="2" Grid.Column="2" Margin="0,0,0,8"
                 ItemsSource="{Binding AnimalTypes}"
                 SelectedItem="{Binding SelectedType, Mode=TwoWay}"
-                Width="260">
+                MinWidth="200"
+                HorizontalAlignment="Stretch">
         <ComboBox.ItemTemplate>
           <DataTemplate>
             <TextBlock Text="{Binding DisplayName}"/>
@@ -39,8 +52,8 @@
     </Grid>
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12" Spacing="8">
-      <Button Content="Cancel" Click="OnCancel" />
-      <Button Content="OK" IsDefault="True" Click="OnOk" />
+      <Button Content="{Binding TextCancel}" Click="OnCancel" MinWidth="90"/>
+      <Button Content="{Binding TextOk}" IsDefault="True" Click="OnOk" MinWidth="90"/>
     </StackPanel>
   </Grid>
 </Window>

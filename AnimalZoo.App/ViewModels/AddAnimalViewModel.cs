@@ -4,28 +4,41 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using AnimalZoo.App.Localization;
 using AnimalZoo.App.Utils;
 
 namespace AnimalZoo.App.ViewModels
 {
     /// <summary>
     /// ViewModel for AddAnimalWindow: holds user input and type list.
-    /// Provides culture-agnostic age parsing (supports both ',' and '.').
+    /// Provides culture-agnostic age parsing if needed, but currently NumericUpDown binds directly to Age.
+    /// Exposes localized label texts for the dialog UI.
     /// </summary>
     public sealed class AddAnimalViewModel : INotifyPropertyChanged
     {
+        private readonly ILocalizationService _loc = Loc.Instance;
+
         private string _name = string.Empty;
-
-        // Numeric age actually used to construct the Animal (fractional supported).
         private double _age = 1.0;
-
-        // Text entered by user; we parse it into Age allowing both ',' and '.'.
-        private string _ageInput = "1";
-
-        // Uses AnimalTypeOption from AnimalFactory (has DisplayName + UnderlyingType).
+        private string _ageInput = "1"; // Kept for future text-based input, not used in current NumericUpDown binding.
         private AnimalTypeOption? _selectedType;
 
         public ObservableCollection<AnimalTypeOption> AnimalTypes { get; } = new();
+
+        // === Localized UI text (bind from XAML) ===
+        public string TextDialogTitle   => _loc["Dialog.AddAnimal.Title"];
+        public string TextCreateHeading => _loc["Dialog.AddAnimal.Heading"];
+        public string TextNameLabel     => _loc["Labels.Name"];
+        public string TextAgeLabel      => _loc["Labels.Age"];
+        public string TextTypeLabel     => _loc["Labels.Type"];
+        public string TextOk            => _loc["Buttons.OK"];
+        public string TextCancel        => _loc["Buttons.Cancel"];
+
+        /// <summary>
+        /// Localized alert text used by dialog validation when name is empty.
+        /// Code-behind can bind/read this string instead of hardcoding the message.
+        /// </summary>
+        public string TextNameMissingAlert => _loc["Alerts.NameMissing"];
 
         /// <summary>User-entered name (must be non-empty on OK).</summary>
         public string Name
@@ -42,15 +55,15 @@ namespace AnimalZoo.App.ViewModels
         }
 
         /// <summary>
-        /// Parsed numeric age in years (can be fractional). Do not bind UI directly to this — use AgeInput.
+        /// Numeric age in years (can be fractional). Public setter is required for TwoWay binding with NumericUpDown.
         /// </summary>
         public double Age
         {
             get => _age;
-            private set
+            set
             {
                 if (value < 0)
-                    return; // Negative ages are rejected here; dialog handles alert on OK.
+                    return;
 
                 if (Math.Abs(_age - value) > double.Epsilon)
                 {
@@ -60,9 +73,7 @@ namespace AnimalZoo.App.ViewModels
             }
         }
 
-        /// <summary>
-        /// Text field bound to the age TextBox. Supports both ',' and '.' as decimal separators.
-        /// </summary>
+        /// <summary>Text field for potential text-based age entry (not used by current XAML).</summary>
         public string AgeInput
         {
             get => _ageInput;
@@ -117,7 +128,20 @@ namespace AnimalZoo.App.ViewModels
 
             SelectedType = AnimalTypes.FirstOrDefault();
             Age = 1.0;
-            AgeInput = "1"; // keep input in sync
+            AgeInput = "1";
+
+            // Refresh labels when language changes
+            _loc.LanguageChanged += () =>
+            {
+                OnPropertyChanged(nameof(TextDialogTitle));
+                OnPropertyChanged(nameof(TextCreateHeading));
+                OnPropertyChanged(nameof(TextNameLabel));
+                OnPropertyChanged(nameof(TextAgeLabel));
+                OnPropertyChanged(nameof(TextTypeLabel));
+                OnPropertyChanged(nameof(TextOk));
+                OnPropertyChanged(nameof(TextCancel));
+                OnPropertyChanged(nameof(TextNameMissingAlert));
+            };
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

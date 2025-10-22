@@ -27,8 +27,6 @@ public abstract class Animal : INotifyPropertyChanged
         get => _name;
         set
         {
-            // Soft validation: disallow empty/whitespace names.
-            // Invalid assignment is ignored to avoid breaking UI flows.
             if (string.IsNullOrWhiteSpace(value))
                 return;
 
@@ -68,21 +66,18 @@ public abstract class Animal : INotifyPropertyChanged
             {
                 _mood = value;
 
-                // Notify state-related bindings first…
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(DisplayState));
 
-                // …then allow derived classes to react (e.g., force landing when sleeping).
                 OnMoodChanged(_mood);
             }
         }
     }
 
     /// <summary>
-    /// Human-readable display of current state.
-    /// Marked virtual so derived types (e.g., Bird/Eagle/Parrot) can append flying state, etc.
+    /// Human-readable display of current state (localized mood).
     /// </summary>
-    public virtual string DisplayState => $"{GetType().Name} • {Mood}";
+    public virtual string DisplayState => $"{Name} • {AnimalText.Mood(Mood)}";
 
     /// <summary>
     /// Identifier string shown to users: "Name-Type - ID".
@@ -101,23 +96,13 @@ public abstract class Animal : INotifyPropertyChanged
         Age = age;
     }
 
-    /// <summary>
-    /// Explicit mood setter used by the higher-level state machine (VM).
-    /// </summary>
+    /// <summary>Explicit mood setter used by the higher-level state machine (VM).</summary>
     public void SetMood(AnimalMood mood) => Mood = mood;
 
-    /// <summary>
-    /// Hook called every time the mood changes.
-    /// Derived classes may override to enforce additional rules (e.g., auto-land on sleep).
-    /// </summary>
-    protected virtual void OnMoodChanged(AnimalMood newMood)
-    {
-        // Default: do nothing.
-    }
+    /// <summary>Hook called every time the mood changes.</summary>
+    protected virtual void OnMoodChanged(AnimalMood newMood) { }
 
-    /// <summary>
-    /// Optional hook for enclosure neighbor join event. Override to customize.
-    /// </summary>
+    /// <summary>Optional hook for enclosure neighbor join event. Override to customize.</summary>
     public virtual string OnNeighborJoined(Animal newcomer)
         => $"{Name} notices {newcomer.Name}.";
 

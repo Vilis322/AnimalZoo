@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AnimalZoo.App.Interfaces;
+using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Models;
 
@@ -17,15 +18,15 @@ public sealed class Raccoon : Animal, ICrazyAction
     public Raccoon(string name, int age)    : base(name, age) { }
 
     public override string MakeSound() => "Chrrr!";
-    public override string Describe() => $"{Name} is a curious Raccoon aged {Age}.";
+    public override string Describe() => string.Format(Loc.Instance["Raccoon.Describe"], Name, Age);
 
     public string ActCrazy(List<Animal> allAnimals)
     {
         var rnd = new Random();
         var item = ShinyThings[rnd.Next(ShinyThings.Length)];
-        return $"{Name} found {item}!";
+        return string.Format(Loc.Instance["Raccoon.Crazy.Found"], Name, item);
     }
 
     public override string OnNeighborJoined(Animal newcomer)
-        => $"{Name} sniffs at {newcomer.Name} and guards the shiny stash.";
+        => string.Format(Loc.Instance["Raccoon.Neighbor"], Name, newcomer.Name);
 }

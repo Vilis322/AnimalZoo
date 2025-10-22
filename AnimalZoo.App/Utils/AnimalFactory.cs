@@ -1,26 +1,54 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using AnimalZoo.App.Localization;
 using AnimalZoo.App.Models;
 
 namespace AnimalZoo.App.Utils;
 
 /// <summary>
 /// UI option for selecting an Animal type.
+/// DisplayName is localized at runtime based on the current language,
+/// while Key is a stable identifier equal to the underlying class name (e.g., "Cat", "Dog").
 /// </summary>
-public sealed class AnimalTypeOption
+public sealed class AnimalTypeOption : INotifyPropertyChanged
 {
-    public string DisplayName { get; }
+    private readonly ILocalizationService _loc = Loc.Instance;
+
+    /// <summary>
+    /// Stable key used for localization lookup and any internal mapping.
+    /// Equals the CLR type name of the animal class (e.g., "Cat", "Dog").
+    /// </summary>
+    public string Key { get; }
+
+    /// <summary>
+    /// Underlying concrete animal type (non-abstract subclass of Animal).
+    /// </summary>
     public Type UnderlyingType { get; }
 
-    public AnimalTypeOption(string displayName, Type type)
+    /// <summary>
+    /// Localized display name resolved from i18n resources at "AnimalType.{Key}".
+    /// When language changes, the property raises change notifications automatically.
+    /// </summary>
+    public string DisplayName => _loc[$"AnimalType.{Key}"];
+
+    public AnimalTypeOption(string key, Type type)
     {
-        DisplayName = displayName;
-        UnderlyingType = type;
+        Key = key ?? throw new ArgumentNullException(nameof(key));
+        UnderlyingType = type ?? throw new ArgumentNullException(nameof(type));
+
+        // Subscribe to language change to refresh DisplayName binding.
+        _loc.LanguageChanged += () => OnPropertyChanged(nameof(DisplayName));
     }
 
     public override string ToString() => DisplayName;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? prop = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
 }
 
 /// <summary>
@@ -29,7 +57,10 @@ public sealed class AnimalTypeOption
 /// </summary>
 public static class AnimalFactory
 {
-    /// <summary>Get list of all non-abstract subclasses of Animal in current assembly.</summary>
+    /// <summary>
+    /// Gets a list of all non-abstract subclasses of Animal in the current assembly.
+    /// Each item exposes a stable Key (type name) and a localized DisplayName.
+    /// </summary>
     public static List<AnimalTypeOption> GetAvailableAnimalTypes()
     {
         var asm = Assembly.GetExecutingAssembly();
@@ -37,13 +68,11 @@ public static class AnimalFactory
         var types = asm.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Animal)))
             .OrderBy(t => t.Name)
-            .Select(t => new AnimalTypeOption(ToDisplayName(t), t))
+            .Select(t => new AnimalTypeOption(t.Name, t))
             .ToList();
 
         return types;
     }
-
-    private static string ToDisplayName(Type t) => t.Name;
 
     /// <summary>
     /// Create Animal instance by best-matching ctor:
@@ -70,3 +99,4 @@ public static class AnimalFactory
         return null;
     }
 }
+

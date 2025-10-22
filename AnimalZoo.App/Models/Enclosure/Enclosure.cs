@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Models;
 
@@ -46,8 +47,12 @@ public sealed class Enclosure<T> where T : Animal
     /// </summary>
     /// <param name="log">Append log line.</param>
     /// <param name="onAte">Callback invoked for each animal as it finishes eating.</param>
+    /// <param name="token">Cancellation token to abort the sequence.</param>
     public async Task DropFoodAsync(Action<string> log, Action<Animal>? onAte = null, CancellationToken token = default)
     {
+        // Localizer is resolved once; keys are looked up at call time so current language is used.
+        var loc = Loc.Instance;
+
         FoodDropped?.Invoke(this, new FoodDroppedEventArgs(DateTime.Now));
 
         var order = _residents.ToList();
@@ -58,9 +63,15 @@ public sealed class Enclosure<T> where T : Animal
         foreach (var a in order)
         {
             if (token.IsCancellationRequested) break;
-            log?.Invoke($"[{step}/{order.Count}] {a.Name} starts eating ...");
+
+            // Localized: "[{step}/{total}] {name} starts eating ..."
+            log?.Invoke(string.Format(loc["Feeding.Start"], step, order.Count, a.Name));
+
             await Task.Delay(TimeSpan.FromMilliseconds(rnd.Next(700, 1400)), token);
-            log?.Invoke($"[{step}/{order.Count}] {a.Name} finished eating.");
+
+            // Localized: "[{step}/{total}] {name} finished eating."
+            log?.Invoke(string.Format(loc["Feeding.Finish"], step, order.Count, a.Name));
+
             onAte?.Invoke(a);
             step++;
         }
