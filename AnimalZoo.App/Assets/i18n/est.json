@@ -116,6 +116,7 @@
   "Dog.Crazy.MultiWoof": "{0} haugub: Auh! Auh! Auh!",
   "Bird.Crazy.Flying": "{0} teeb hullumeelseid lennuringe!",
   "Eagle.Crazy.Flying": "{0} sooritab julge sööstlennu!",
+  "Eagle.Crazy.Landing": "{0} istub pärast julge sööstlennust.",
   "Fox.Crazy.Steal": "{0} krabab salakavalalt ampsu!",
   "Monkey.Crazy.Swap": "{0} vahetab {1} ja {2} nimed omavahel! Hull kaos!",
   "Parrot.Crazy.Mimic": "{0} jäljendab {1}!",

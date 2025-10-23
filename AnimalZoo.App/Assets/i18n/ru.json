@@ -117,6 +117,7 @@
   "Dog.Crazy.MultiWoof": "{0} лает: ГАВ! ГАВ! ГАВ!",
   "Bird.Crazy.Flying": "{0} безумно кружит в полёте!",
   "Eagle.Crazy.Flying": "{0} делает дерзкое пике!",
+  "Eagle.Crazy.Landing": "{0} садится после резкого пике.",
   "Fox.Crazy.Steal": "{0} хитро стащил перекус!",
   "Monkey.Crazy.Swap": "{0} меняет местами имена {1} и {2}! Настоящий хаос!",
   "Parrot.Crazy.Mimic": "{0} мимикрирует {1}!",
