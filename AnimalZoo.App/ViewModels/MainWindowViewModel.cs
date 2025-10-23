@@ -156,6 +156,46 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     /// <summary>UI should display this alert text in a modal.</summary>
     public event Action<string>? AlertRequested;
 
+    // --- Language picker (for ComboBox in XAML) ---
+    /// <summary>
+    /// Presentation model for a language entry in the ComboBox.
+    /// Kept simple: shows enum code (ENG/RU/EST), stores Language enum value.
+    /// </summary>
+    public sealed class LanguageOption
+    {
+        public Language Code { get; }
+        public string Display { get; }
+        public LanguageOption(Language code, string display)
+        {
+            Code = code;
+            Display = display;
+        }
+    }
+
+    /// <summary>Available languages for selection in the UI.</summary>
+    public ObservableCollection<LanguageOption> LanguageOptions { get; } = new();
+
+    private LanguageOption? _selectedLanguageOption;
+
+    /// <summary>
+    /// Currently selected language option in the ComboBox.
+    /// Setting this property immediately applies the language via ILocalizationService.
+    /// </summary>
+    public LanguageOption? SelectedLanguageOption
+    {
+        get => _selectedLanguageOption;
+        set
+        {
+            if (!Equals(_selectedLanguageOption, value) && value is not null)
+            {
+                _selectedLanguageOption = value;
+                OnPropertyChanged();
+                // Apply language right away to provide instant feedback in the UI.
+                _loc.SetLanguage(value.Code);
+            }
+        }
+    }
+
     // Headers proxy (Type/Count/AverageAge)
     public LabelsProxy Labels { get; }
 
@@ -163,9 +203,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         Labels = new LabelsProxy(_loc);
 
+        // --- Initialize language options (shown in ComboBox) ---
+        // Display string is short code; adjust later if you need native names.
+        LanguageOptions.Add(new LanguageOption(Language.ENG, "ENG"));
+        LanguageOptions.Add(new LanguageOption(Language.RU,  "RU"));
+        LanguageOptions.Add(new LanguageOption(Language.EST, "EST"));
+        SelectedLanguageOption = LanguageOptions.FirstOrDefault(o => o.Code == _loc.CurrentLanguage)
+                                 ?? LanguageOptions.FirstOrDefault();
+
         // Subscribe language changes
         _loc.LanguageChanged += () =>
         {
+            // Keep ComboBox in sync if language set programmatically (e.g., via legacy cycle command)
+            var need = LanguageOptions.FirstOrDefault(o => o.Code == _loc.CurrentLanguage);
+            if (need is not null && !Equals(SelectedLanguageOption, need))
+            {
+                _selectedLanguageOption = need; // avoid reentrancy when raising PropertyChanged
+                OnPropertyChanged(nameof(SelectedLanguageOption));
+            }
+
             // Simple labels/buttons
             OnPropertyChanged(nameof(TextMakeSound));
             OnPropertyChanged(nameof(TextFeed));
@@ -275,18 +331,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     /// <summary>Localized suffix for the animals list "( N y.o.)" part.</summary>
     public string TextAgeListSuffix    => _loc["List.AgeSuffixList"];
 
-    /// <summary>Localized state of the selected animal.</summary>
+    /// <summary>
+    /// Localized state line for the selected animal.
+    /// Shows just the mood; for flyable animals adds a localized flight status (flying/on the ground).
+    /// </summary>
     public string SelectedAnimalStateL10n
     {
         get
         {
             if (SelectedAnimal is null) return string.Empty;
             var mood = LocalizeMood(SelectedAnimal.Mood);
-            return $"{SelectedAnimal.Name} • {mood}";
+            var fly = GetFlyStatus(SelectedAnimal);
+            return fly is null ? mood : $"{mood} • {fly}";
         }
     }
 
-    /// <summary>Cycle language: ENG → RU → EST → ENG.</summary>
+    /// <summary>Cycle language: ENG → RU → EST → ENG (legacy, kept for compatibility).</summary>
     private void CycleLanguage()
     {
         var next = _loc.CurrentLanguage switch
@@ -405,56 +465,86 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         UpdateStats();
     }
 
+    /// <summary>
+    /// Toggles flight state for any Flyable animal without hardcoding concrete classes.
+    /// The method discovers the best available operation in this order:
+    /// ToggleFly() → Fly() → (TakeOff()/Land()) → direct write to IsFlying (fallback).
+    /// It logs via generic keys (Log.FlyStart/Log.FlyStop) and updates image/state.
+    /// </summary>
     private void ToggleFly()
     {
         if (SelectedAnimal is null) return;
 
+        // Do not allow toggling while sleeping (consistent with previous UX).
         if (SelectedAnimal is Flyable && SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
             AlertRequested?.Invoke(string.Format(_loc["Alerts.SleepingNoFly"], SelectedAnimal.Name));
             return;
         }
 
-        switch (SelectedAnimal)
+        // Only handle Flyable; otherwise nothing to toggle.
+        if (SelectedAnimal is not Flyable)
+            return;
+
+        var type = SelectedAnimal.GetType();
+        var wasFlying = IsAnimalFlying(SelectedAnimal);
+
+        // Preferred method: ToggleFly()
+        var toggle = type.GetMethod("ToggleFly", BindingFlags.Public | BindingFlags.Instance);
+
+        // Alternative: Fly() (some classes implement "toggle" behavior via Fly())
+        var fly = type.GetMethod("Fly", BindingFlags.Public | BindingFlags.Instance, Array.Empty<Type>());
+
+        // Pair methods: TakeOff() / Land() — use depending on current state
+        var takeOff = type.GetMethod("TakeOff", BindingFlags.Public | BindingFlags.Instance);
+        var land    = type.GetMethod("Land",    BindingFlags.Public | BindingFlags.Instance);
+
+        bool invoked = false;
+
+        if (toggle is not null)
         {
-            case Bird b:
-                {
-                    var wasFlying = b.IsFlying;
-                    b.ToggleFly();
-                    if (b.IsFlying && !wasFlying)
-                        LogEntries.Add(string.Format(_loc["Log.BirdTakeOff"], b.Name));
-                    else if (!b.IsFlying && wasFlying)
-                        LogEntries.Add(string.Format(_loc["Log.BirdLand"], b.Name));
-                    break;
-                }
-            case Eagle e:
-                {
-                    var wasFlying = e.IsFlying;
-                    e.ToggleFly();
-                    if (e.IsFlying && !wasFlying)
-                        LogEntries.Add(string.Format(_loc["Log.EagleTakeOff"], e.Name));
-                    else if (!e.IsFlying && wasFlying)
-                        LogEntries.Add(string.Format(_loc["Log.EagleLand"], e.Name));
-                    break;
-                }
-            case Parrot p:
-                {
-                    var wasFlying = p.IsFlying;
-                    p.Fly();
-                    if (p.IsFlying && !wasFlying)
-                        LogEntries.Add(string.Format(_loc["Log.ParrotFly"], p.Name));
-                    else if (!p.IsFlying && wasFlying)
-                        LogEntries.Add(string.Format(_loc["Log.ParrotLand"], p.Name));
-                    break;
-                }
-            case Flyable f:
-                {
-                    f.Fly();
-                    break;
-                }
+            toggle.Invoke(SelectedAnimal, null);
+            invoked = true;
+        }
+        else if (fly is not null)
+        {
+            fly.Invoke(SelectedAnimal, null);
+            invoked = true;
+        }
+        else if (!wasFlying && takeOff is not null)
+        {
+            takeOff.Invoke(SelectedAnimal, null);
+            invoked = true;
+        }
+        else if (wasFlying && land is not null)
+        {
+            land.Invoke(SelectedAnimal, null);
+            invoked = true;
+        }
+        else
+        {
+            // Fallback: try flipping IsFlying if it is writable
+            var isFlyingProp = type.GetProperty("IsFlying", BindingFlags.Public | BindingFlags.Instance);
+            if (isFlyingProp?.CanWrite == true)
+            {
+                isFlyingProp.SetValue(SelectedAnimal, !wasFlying);
+                invoked = true;
+            }
+        }
+
+        // If something was invoked, evaluate the result and log via generic keys
+        if (invoked)
+        {
+            var nowFlying = IsAnimalFlying(SelectedAnimal);
+            if (nowFlying != wasFlying)
+            {
+                var key = nowFlying ? "Log.FlyStart" : "Log.FlyStop";
+                LogEntries.Add(string.Format(_loc[key], SelectedAnimal.Name));
+            }
         }
 
         UpdateCurrentImage();
+        OnPropertyChanged(nameof(SelectedAnimalStateL10n));
     }
 
     private async Task DropFoodAsync()
@@ -581,6 +671,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (prop is null || prop.PropertyType != typeof(bool) || !prop.CanRead) return false;
         var value = prop.GetValue(a);
         return value is bool b && b;
+    }
+
+    /// <summary>
+    /// Returns a localized fly status for flyable animals (Flying/On the ground); 
+    /// otherwise returns null so the UI shows only mood.
+    /// </summary>
+    private string? GetFlyStatus(Animal a)
+    {
+        if (a is not Flyable) return null;
+        var isFlying = IsAnimalFlying(a);
+        return _loc[isFlying ? "FlyingState.Flying" : "FlyingState.Perched"];
     }
 
     private void UpdateCurrentImage()

@@ -3,7 +3,7 @@
 
   "Buttons.MakeSound": "Издать звук",
   "Buttons.Feed": "Покормить",
-  "Buttons.CrazyAction": "Безумие",
+  "Buttons.CrazyAction": "Безумное действие",
   "Buttons.ToggleFly": "Летать / Сесть",
   "Buttons.ClearLog": "Очистить лог",
   "Buttons.DropFood": "Рассыпать еду",
@@ -55,6 +55,8 @@
   "Log.ParrotFly": "{0} ТЕПЕРЬ ЛЕТИТ и кричит «ЧИРИК!!!»",
   "Log.ParrotLand": "{0} плавно приземляется.",
   "Log.ResetAllHungry": "Все животные сброшены в состояние «Голоден» (через «Обновить статистику»).",
+  "Log.FlyStart": "{0} летит.",
+  "Log.FlyStop": "{0} сел.",
 
   "Alerts.SoundError": "Ошибка воспроизведения звука: {0}",
   "Alerts.NameMissing": "Нельзя создать животное без имени. Введите имя!",
@@ -77,7 +79,7 @@
   "Mood.Gaming": "Играет",
 
   "FlyingState.Flying": "Летит",
-  "FlyingState.Perched": "Садится",
+  "FlyingState.Perched": "Сидит",
 
   "AnimalType.Bird": "Птица",
   "AnimalType.Cat": "Кот",
@@ -108,24 +110,19 @@
   "Parrot.Neighbor": "Попугай громко приветствует новичка.",
   "Raccoon.Neighbor": "Енот проверяет карманы новичка.",
   "Turtle.Neighbor": "Черепаха медленно кивает новичку.",
-
-  "Cat.Crazy.Scratch": "{0} безумно всё царапает!",
-  "Dog.Crazy.MultiWoof": "{0} лает: ГАВ! ГАВ! ГАВ!",
-  "Bird.Crazy.Flying": "{0} безумно кружит в полёте!",
-  "Eagle.Crazy.Dive": "{0} делает дерзкое пике!",
-  "Fox.Crazy.Sneak": "{0} хитро крадётся вокруг!",
-  "Monkey.Crazy.Banana": "{0} швыряется бананами!",
-  "Parrot.Crazy.Repeat": "{0} громко повторяет каждое слово!",
-  "Raccoon.Crazy.Steal": "{0} безумно тырит всё блестящее!",
-  "Turtle.Crazy.SlowDance": "{0} устраивает очень медленный безумный танец!",
-
   "Eagle.Neighbor.Bird": "Орел заметил другую птицу и пронзительно крикнул.",
   "Eagle.Neighbor.Other": "Орел наблюдает за новичком с высоты.",
 
-  "Parrot.Crazy.Mimic": "{0} громко передразнивает всех!",
-  "Raccoon.Crazy.Found": "{0} нашёл что-то блестящее и в восторге!",
-  "Monkey.Crazy.Swap": "{0} шутливо меняет вещи местами!",
+  "Cat.Crazy.StealFood": "{0} крадёт еду!",
+  "Dog.Crazy.MultiWoof": "{0} лает: ГАВ! ГАВ! ГАВ!",
+  "Bird.Crazy.Flying": "{0} безумно кружит в полёте!",
+  "Eagle.Crazy.Flying": "{0} делает дерзкое пике!",
   "Fox.Crazy.Steal": "{0} хитро стащил перекус!",
+  "Monkey.Crazy.Swap": "{0} меняет местами имена {1} и {2}! Настоящий хаос!",
+  "Parrot.Crazy.Mimic": "{0} мимикрирует {1}!",
+  "Parrot.Crazy.NoTargets": "Некого мимикрировать.",
+  "Raccoon.Crazy.Found": "{0} нашёл что-то блестящее и в восторге!",
+  "Turtle.Crazy.Race": "{0} устраивает очень медленный безумный танец!",
 
   "Feeding.Start": "[{0}/{1}] {2} начинает есть ...",
   "Feeding.Finish": "[{0}/{1}] {2} закончил есть."

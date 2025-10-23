@@ -29,7 +29,8 @@ public sealed class Monkey : Animal, ICrazyAction
         var originalB = b.Name;
         (a.Name, b.Name) = (b.Name, a.Name);
 
-        return string.Format(Loc.Instance["Monkey.Crazy.Swap"], Name, originalA, a.GetType().Name, originalB, b.GetType().Name);
+        // Localized message: actor + two names swapped
+        return string.Format(Loc.Instance["Monkey.Crazy.Swap"], Name, originalA, originalB);
     }
 
     public override string OnNeighborJoined(Animal newcomer)

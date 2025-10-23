@@ -55,6 +55,8 @@
   "Log.ParrotFly": "{0} is now FLYING and screams 'CHIRP!!!'",
   "Log.ParrotLand": "{0} lands gracefully.",
   "Log.ResetAllHungry": "All animals reset to Hungry (via Refresh Stats).",
+  "Log.FlyStart": "{0} is flying.",
+  "Log.FlyStop": "{0} perched.",
 
   "Alerts.SoundError": "Sound playback error: {0}",
   "Alerts.NameMissing": "Unable to create an animal without a name. Please enter the animal's name!",
@@ -108,24 +110,20 @@
   "Parrot.Neighbor": "The parrot shouts hello to the newcomer.",
   "Raccoon.Neighbor": "The raccoon inspects the newcomer’s pockets.",
   "Turtle.Neighbor": "The turtle slowly nods to the newcomer.",
-
-  "Cat.Crazy.Scratch": "{0} scratches everything like crazy!",
-  "Dog.Crazy.MultiWoof": "{0} barks WOOF! WOOF! WOOF!",
-  "Bird.Crazy.Flying": "{0} goes into crazy flight circles!",
-  "Eagle.Crazy.Dive": "{0} performs a daring dive!",
-  "Fox.Crazy.Sneak": "{0} sneaks around mischievously!",
-  "Monkey.Crazy.Banana": "{0} throws bananas everywhere!",
-  "Parrot.Crazy.Repeat": "{0} repeats every word loudly!",
-  "Raccoon.Crazy.Steal": "{0} steals shiny things like crazy!",
-  "Turtle.Crazy.SlowDance": "{0} does a very slow crazy dance!",
-
   "Eagle.Neighbor.Bird": "The eagle spots another bird and lets out a sharp screech.",
   "Eagle.Neighbor.Other": "The eagle watches the newcomer from above.",
 
-  "Parrot.Crazy.Mimic": "{0} mimics everyone loudly!",
-  "Raccoon.Crazy.Found": "{0} found something shiny and is thrilled!",
-  "Monkey.Crazy.Swap": "{0} swaps everyone's items playfully!",
+  "Cat.Crazy.StealFood": "{0} steals the food!",
+  "Dog.Crazy.MultiWoof": "{0} barks WOOF! WOOF! WOOF!",
+  "Bird.Crazy.Flying": "{0} goes into crazy flight circles!",
+  "Eagle.Crazy.Flying": "{0} performs a daring dive!",
   "Fox.Crazy.Steal": "{0} sneakily steals a snack!",
+  "Monkey.Crazy.Swap": "{0} swaps the names of {1} and {2}! Crazy chaos!",
+  "Parrot.Crazy.Mimic": "{0} mimics {1}!",
+  "Parrot.Crazy.NoTargets": "No one to mimic.",
+  "Raccoon.Crazy.Found": "{0} found something shiny and is thrilled!",
+  "Turtle.Crazy.Race": "{0} does a very slow crazy dance!",
+  
 
   "Feeding.Start": "[{0}/{1}] {2} starts eating ...",
   "Feeding.Finish": "[{0}/{1}] {2} finished eating."

@@ -70,14 +70,19 @@
           <TextBlock Text="{Binding TextToggleIds}" TextAlignment="Center" TextWrapping="Wrap"/>
         </Button>
         <Border Grid.Column="1"/>
-        <Button Grid.Column="2"
-                Command="{Binding ChangeLanguageCommand}"
-                HorizontalAlignment="Right"
-                MinWidth="60"
-                Padding="10,4"
-                ToolTip.Tip="Change language">
-          <TextBlock Text="{Binding TextLanguageButton}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
+        <!-- Language ComboBox (vertical list of languages) -->
+        <ComboBox Grid.Column="2"
+                  ItemsSource="{Binding LanguageOptions}"
+                  SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                  MinWidth="80"
+                  HorizontalAlignment="Right"
+                  ToolTip.Tip="Change language">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Display}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
       </Grid>
 
       <!-- IDs panel (scrollable, collapsible) -->
@@ -117,7 +122,7 @@
           <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedAnimal.Age}"/>
 
           <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding TextStateColon}"/>
-          <!-- CHANGED: localized state line -->
+          <!-- CHANGED: localized state line (name removed; shows mood + fly status if applicable) -->
           <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAnimalStateL10n}"/>
         </Grid>
       </Border>
@@ -188,7 +193,7 @@
       <TextBlock Text="{Binding TextStatsHeader}" FontWeight="SemiBold" Margin="0,8,0,0"/>
 
       <!-- Scrollable stats block -->
-      <Border Padding="8" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" MaxHeight="260">
+      <Border Padding="8" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Height="260">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Spacing="6">
 
@@ -229,7 +234,7 @@
             <!-- Oldest -->
             <TextBlock Text="{Binding TextOldestHeader}" FontWeight="SemiBold" Margin="0,8,0,0"/>
             <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="2,4">
-              <TextBlock Text="{Binding OldestStat}"/>
+              <TextBlock Text="{Binding OldestStat}" TextWrapping="Wrap"/>
             </Border>
 
           </StackPanel>

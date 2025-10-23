@@ -17,7 +17,6 @@
   "Buttons.DropFoodFull": "Puista toit (sööda kõiki)",
   "Buttons.RefreshStatsFull": "Värskenda statistikat",
   "Buttons.DeleteSelected": "Kustuta valik",
-
   "Labels.Food": "Toit",
   "Labels.Name": "Nimi",
   "Labels.Age": "Vanus",
@@ -55,6 +54,8 @@
   "Log.ParrotFly": "{0} LENDAB ja kisab „TSIRP!!!“",
   "Log.ParrotLand": "{0} maandub sujuvalt.",
   "Log.ResetAllHungry": "Kõik loomad seati „Näljane“ olekusse (läbi „Värskenda statistikat“).",
+  "Log.FlyStart": "{0} lendab.",
+  "Log.FlyStop": "{0} maandus.",
 
   "Alerts.SoundError": "Heli esitamise viga: {0}",
   "Alerts.NameMissing": "Looma ei saa luua nime sisestamata. Palun sisesta nimi!",
@@ -108,24 +109,19 @@
   "Parrot.Neighbor": "Papagoi hõikab uustulnukale tere.",
   "Raccoon.Neighbor": "Pesukaru uurib uustulnuka taskuid.",
   "Turtle.Neighbor": "Kilpkonn noogutab aeglaselt uustulnukale.",
-
-  "Cat.Crazy.Scratch": "{0} kraabib kõike hullupööra!",
-  "Dog.Crazy.MultiWoof": "{0} haugub: Auh! Auh! Auh!",
-  "Bird.Crazy.Flying": "{0} teeb hullumeelseid lennuringe!",
-  "Eagle.Crazy.Dive": "{0} sooritab julge sööstlennu!",
-  "Fox.Crazy.Sneak": "{0} hiilib ulakalt ringi!",
-  "Monkey.Crazy.Banana": "{0} loobib igale poole banane!",
-  "Parrot.Crazy.Repeat": "{0} kordab iga sõna valjult!",
-  "Raccoon.Crazy.Steal": "{0} varastab pööraselt kõike läikivat!",
-  "Turtle.Crazy.SlowDance": "{0} teeb väga aeglase hullu tantsu!",
-  
   "Eagle.Neighbor.Bird": "Kotkas märkab teist lindu ja annab kitsa kilje.",
   "Eagle.Neighbor.Other": "Kotkas jälgib uustulnukat kõrgustest.",
 
-  "Parrot.Crazy.Mimic": "{0} matkib kõiki valjult!",
-  "Raccoon.Crazy.Found": "{0} leidis midagi läikivat ja on vaimustuses!",
-  "Monkey.Crazy.Swap": "{0} vahetab naljaga asju ringi!",
+  "Cat.Crazy.StealFood": "{0} varastab sööki!",
+  "Dog.Crazy.MultiWoof": "{0} haugub: Auh! Auh! Auh!",
+  "Bird.Crazy.Flying": "{0} teeb hullumeelseid lennuringe!",
+  "Eagle.Crazy.Flying": "{0} sooritab julge sööstlennu!",
   "Fox.Crazy.Steal": "{0} krabab salakavalalt ampsu!",
+  "Monkey.Crazy.Swap": "{0} vahetab {1} ja {2} nimed omavahel! Hull kaos!",
+  "Parrot.Crazy.Mimic": "{0} jäljendab {1}!",
+  "Parrot.Crazy.NoTargets": "Pole kedagi jäljendada.",
+  "Raccoon.Crazy.Found": "{0} leidis midagi läikivat ja on vaimustuses!",
+  "Turtle.Crazy.Race": "{0} teeb väga aeglase hullu tantsu!",
 
   "Feeding.Start": "[{0}/{1}] {2} alustab söömist ...",
   "Feeding.Finish": "[{0}/{1}] {2} lõpetas söömise."

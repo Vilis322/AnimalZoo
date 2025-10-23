@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using AnimalZoo.App.Utils;
 using AnimalZoo.App.ViewModels;
+using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Views
 {
@@ -78,8 +79,9 @@ namespace AnimalZoo.App.Views
             var name = vm.Name?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(name))
             {
-                // Name is mandatory — keep dialog open and show alert.
-                var alert = new AlertWindow("Unable to create an animal without a name. Please enter the animal's name!");
+                // Name is mandatory — keep dialog open and show localized alert.
+                var msg = Loc.Instance["Alerts.NameMissing"];
+                var alert = new AlertWindow(msg);
                 await alert.ShowDialog(this);
                 return;
             }
