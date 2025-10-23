@@ -32,7 +32,7 @@ public sealed class AnimalTypeStat
 
 /// <summary>
 /// Main view model: animals list, actions, log, images, and LINQ stats.
-/// This version wires localization for headers, logs, states and age suffix.
+/// Handles localization of headers, logs, states and age suffix.
 /// </summary>
 public sealed class MainWindowViewModel : INotifyPropertyChanged
 {
@@ -104,6 +104,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
                 UpdateCurrentImage();
                 OnPropertyChanged(nameof(SelectedAnimalStateL10n));
+                OnPropertyChanged(nameof(SelectedAnimalTypeL10n));
 
                 (MakeSoundCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (FeedCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -148,7 +149,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public ICommand RemoveLogEntryByValueCommand { get; }
     public ICommand DropFoodCommand { get; }
     public ICommand RefreshStatsCommand { get; }
-    public ICommand ChangeLanguageCommand { get; }
+    // NOTE: legacy language cycle command removed; property kept nullable to avoid CS8618
+    public ICommand? ChangeLanguageCommand { get; }
 
     private readonly Random _random = new();
     private readonly Dictionary<Animal, CancellationTokenSource> _flows = new();
@@ -159,7 +161,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     // --- Language picker (for ComboBox in XAML) ---
     /// <summary>
     /// Presentation model for a language entry in the ComboBox.
-    /// Kept simple: shows enum code (ENG/RU/EST), stores Language enum value.
     /// </summary>
     public sealed class LanguageOption
     {
@@ -204,7 +205,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         Labels = new LabelsProxy(_loc);
 
         // --- Initialize language options (shown in ComboBox) ---
-        // Display string is short code; adjust later if you need native names.
         LanguageOptions.Add(new LanguageOption(Language.ENG, "ENG"));
         LanguageOptions.Add(new LanguageOption(Language.RU,  "RU"));
         LanguageOptions.Add(new LanguageOption(Language.EST, "EST"));
@@ -214,7 +214,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         // Subscribe language changes
         _loc.LanguageChanged += () =>
         {
-            // Keep ComboBox in sync if language set programmatically (e.g., via legacy cycle command)
+            // Keep ComboBox in sync if language set programmatically
             var need = LanguageOptions.FirstOrDefault(o => o.Code == _loc.CurrentLanguage);
             if (need is not null && !Equals(SelectedLanguageOption, need))
             {
@@ -252,7 +252,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(TextFooterTips));
             OnPropertyChanged(nameof(TextAgeListSuffix));
 
+            // Derived localized fields depending on selected animal
             OnPropertyChanged(nameof(SelectedAnimalStateL10n));
+            OnPropertyChanged(nameof(SelectedAnimalTypeL10n));
 
             Labels.RaiseAllChanged();
             UpdateStats();
@@ -285,7 +287,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
         ToggleIdListCommand           = new RelayCommand(() => IsIdListVisible = !IsIdListVisible);
-        ChangeLanguageCommand         = new RelayCommand(CycleLanguage);
+        // ChangeLanguageCommand intentionally not initialized (nullable) - selection is via ComboBox.
 
         // Localized timeline logs
         HappyEvent   += a => LogEntries.Add(string.Format(_loc["Log.Happy"], a.Name));
@@ -346,16 +348,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Cycle language: ENG → RU → EST → ENG (legacy, kept for compatibility).</summary>
-    private void CycleLanguage()
+    /// <summary>
+    /// Localized type name for the selected animal (e.g., "Dog", "Parrot").
+    /// </summary>
+    public string SelectedAnimalTypeL10n
     {
-        var next = _loc.CurrentLanguage switch
+        get
         {
-            Language.ENG => Language.RU,
-            Language.RU  => Language.EST,
-            _            => Language.ENG
-        };
-        _loc.SetLanguage(next);
+            if (SelectedAnimal is null) return string.Empty;
+            return _loc[$"AnimalType.{SelectedAnimal.GetType().Name}"];
+        }
     }
 
     /// <summary>Add an animal to all storages and log.</summary>
@@ -467,15 +469,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Toggles flight state for any Flyable animal without hardcoding concrete classes.
-    /// The method discovers the best available operation in this order:
+    /// Discovers the best available operation in this order:
     /// ToggleFly() → Fly() → (TakeOff()/Land()) → direct write to IsFlying (fallback).
-    /// It logs via generic keys (Log.FlyStart/Log.FlyStop) and updates image/state.
+    /// Logs via generic keys (Log.FlyStart/Log.FlyStop) and updates image/state.
     /// </summary>
     private void ToggleFly()
     {
         if (SelectedAnimal is null) return;
 
-        // Do not allow toggling while sleeping (consistent with previous UX).
+        // Do not allow toggling while sleeping (UX rule).
         if (SelectedAnimal is Flyable && SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
             AlertRequested?.Invoke(string.Format(_loc["Alerts.SleepingNoFly"], SelectedAnimal.Name));
@@ -545,6 +547,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         UpdateCurrentImage();
         OnPropertyChanged(nameof(SelectedAnimalStateL10n));
+        OnPropertyChanged(nameof(SelectedAnimalTypeL10n));
     }
 
     private async Task DropFoodAsync()
@@ -661,6 +664,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             UpdateCurrentImage();
             UpdateStats();
             OnPropertyChanged(nameof(SelectedAnimalStateL10n));
+            OnPropertyChanged(nameof(SelectedAnimalTypeL10n));
         }
     }
 
@@ -673,10 +677,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         return value is bool b && b;
     }
 
-    /// <summary>
-    /// Returns a localized fly status for flyable animals (Flying/On the ground); 
-    /// otherwise returns null so the UI shows only mood.
-    /// </summary>
+    /// <summary>Returns a localized fly status for flyable animals; otherwise null.</summary>
     private string? GetFlyStatus(Animal a)
     {
         if (a is not Flyable) return null;

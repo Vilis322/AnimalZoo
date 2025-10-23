@@ -113,17 +113,26 @@
                HorizontalAlignment="Center"/>
       </Border>
 
+      <!-- DETAILS CARD -->
       <Border Padding="10" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
-        <Grid ColumnDefinitions="Auto,10,*" RowDefinitions="Auto,Auto,Auto">
+        <!-- CHANGED: added an extra row for Type (between Name and Age) -->
+        <Grid ColumnDefinitions="Auto,10,*" RowDefinitions="Auto,Auto,Auto,Auto">
           <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding TextNameColon}"/>
           <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedAnimal.Name}"/>
 
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding TextAgeColon}"/>
-          <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding SelectedAnimal.Age}"/>
+          <!-- NEW: Type row -->
+          <TextBlock Grid.Row="1" Grid.Column="0"
+                     Text="{Binding Labels.Type, StringFormat='{}{0}:'}"/>
+          <TextBlock Grid.Row="1" Grid.Column="2"
+                     Text="{Binding SelectedAnimalTypeL10n}"/>
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding TextStateColon}"/>
-          <!-- CHANGED: localized state line (name removed; shows mood + fly status if applicable) -->
-          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAnimalStateL10n}"/>
+          <!-- moved Age/State one row down -->
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding TextAgeColon}"/>
+          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAnimal.Age}"/>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding TextStateColon}"/>
+          <!-- CHANGED earlier: localized state line (name removed; shows mood + fly status if applicable) -->
+          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedAnimalStateL10n}"/>
         </Grid>
       </Border>
 
@@ -193,7 +202,8 @@
       <TextBlock Text="{Binding TextStatsHeader}" FontWeight="SemiBold" Margin="0,8,0,0"/>
 
       <!-- Scrollable stats block -->
-      <Border Padding="8" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Height="260">
+      <!-- CHANGED: slightly smaller fixed height to keep the frame above the bottom; scroll remains enabled -->
+      <Border Padding="8" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Height="220">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Spacing="6">
 
