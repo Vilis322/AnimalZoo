@@ -66,12 +66,20 @@ AnimalZoo/
    │  ├─ Cat.cs
    │  ├─ Dog.cs
    │  ├─ Eagle.cs
+   │  ├─ Fox.cs
    │  ├─ Monkey.cs
-   │  └─ Raccoon.cs                       
+   │  ├─ Parrot.cs
+   │  ├─ Raccoon.cs
+   │  └─ Turtle.cs                        
    ├─ Interfaces/
    │  ├─ Flyable.cs                    
    │  ├─ ICrazyAction.cs  
-   │  └─ IRepository.cs  
+   │  └─ IRepository.cs 
+   ├─ Localization/
+   │  ├─ ILocalizationService.cs
+   │  ├─ Language.cs
+   │  ├─ Loc.cs
+   │  └─ LocalizationService.cs  
    ├─ Repositories/
    │  └─ InMemoryRepository.cs      
    ├─ Utils/
@@ -83,8 +91,12 @@ AnimalZoo/
       ├─ Cat/
       ├─ Dog/
       ├─ Eagle/
+      ├─ Fox/      
       ├─ Monkey/
-      └─ Raccoon/               
+      ├─ Parrot/
+      ├─ Raccoon/
+      ├─ Turtle/
+      └─ i18n/  # .json files with supported localization keys              
 ```
 ---
 
