@@ -145,7 +145,7 @@ make clean
 ```
  ---
 
-## **Issue** (university task)
+## **Issue** (university task) -> CLOSED 
 - Create three new animal types that inherit from Animal and optionally implement Flyable or ICrazyAction.
 - Each class must:
   - Implement its own MakeSound() method.
@@ -153,7 +153,7 @@ make clean
   - Have at least one unique “crazy” action.
   - Provide corresponding images in Assets/<AnimalName>/. (optional)
 
-## **Second Issue** (university task, issue pretty the same as the previous one)
+## **Second Issue** (university task, issue is the same as the previous one)
 - Create three new animal types that inherit from Animal and optionally implement Flyable or ICrazyAction.
 - Each class must:
     - Implement its own MakeSound() method.
