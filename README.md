@@ -5,7 +5,7 @@
 ##  Project Description
 
 **AnimalZoo** is a simple desktop application created for educational purposes.  
-The goal is to practice **object-oriented programming (OOP)** principles and build a GUI using **Avalonia UI**. 
+The goal is to practice **object-oriented programming (OOP)** principles and build a GUI using **Avalonia UI**.
 Each animal is an object with its own properties, behavior, and dynamic state transitions.
 
  ---
@@ -31,6 +31,31 @@ Each animal is an object with its own properties, behavior, and dynamic state tr
 - **Add animal dialog**
     - Reflection-based type discovery (no hardcoding).
     - Name + age + type; supports future animal classes out of the box.
+- **Localization**
+    - Built-in multilingual support with **3 languages**: English 🇬🇧, Russian 🇷🇺, Estonian 🇪🇪.
+    - All UI labels, buttons, alerts, logs, and messages are localized.
+    - Language can be changed at runtime via the **language dropdown** in the main window.
+- **Sound system**
+    - Each animal has its own **voice.wav** stored under `Assets/<Animal>/`.
+    - Pressing **Make Sound** plays the correct sound file for the selected animal.
+    - Some animals also support additional effect sounds (e.g., **Dog** plays `crazy_action.wav` during crazy action).
+- **Crazy actions**
+    - Each animal can have unique “crazy” behavior, for example:
+        - **Dog**: performs a multi-bark with a dedicated sound effect.
+        - **Monkey**: swaps names between animals.
+        - **Parrot**: mimics sounds of other animals; if no suitable targets are available, shows a localized alert.
+    - All crazy actions are fully localized and logged.
+- **Flight mechanics**
+    - Any animal implementing `Flyable` can toggle between flying and grounded states.
+    - Unified logic for all flying animals (no class-specific hardcoding).
+    - Dynamic UI state updates and localized flight status display.
+- **LINQ-based statistics**
+    - Real-time table summarizing animal counts and average ages by type.
+    - Separate lists for hungry animals and the oldest one.
+    - Fully scrollable statistics panel with live updates.
+- **Alerts and dialogs**
+    - All alert windows use localized messages and button labels.
+    - Centralized alert request mechanism integrated with ViewModel layer.
 
 ---
 
@@ -85,7 +110,8 @@ AnimalZoo/
    ├─ Utils/
    │  ├─ AnimalFactory.cs
    │  ├─ AssetService.cs            
-   │  └─ RelayCommand.cs               
+   │  ├─ RelayCommand.cs     
+   │  └─ SoundService.cs               
    └─ Assets/
       ├─ Bird/
       ├─ Cat/
