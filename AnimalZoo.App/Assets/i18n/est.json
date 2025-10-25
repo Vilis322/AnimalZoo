@@ -89,6 +89,9 @@
   "AnimalType.Parrot": "Papagoi",
   "AnimalType.Raccoon": "Pesukaru",
   "AnimalType.Turtle": "Kilpkonn",
+  "AnimalType.Bat": "Nahkhiir",
+  "AnimalType.Lion": "Lõvi",
+  "AnimalType.Penguin": "Pingviin",
 
   "Cat.Hello": "Mjäu! Mina olen kass {0}.",
   "Dog.Hello": "Auh! Mina olen koer {0}.",
@@ -111,6 +114,9 @@
   "Turtle.Neighbor": "Kilpkonn noogutab aeglaselt uustulnukale.",
   "Eagle.Neighbor.Bird": "Kotkas märkab teist lindu ja annab kitsa kilje.",
   "Eagle.Neighbor.Other": "Kotkas jälgib uustulnukat kõrgustest.",
+  "Lion.Neighbor": "{0} noogutab väärikalt {1}-le.",
+  "Penguin.Neighbor": "{0} tammub tervituseks {1}-le.",
+  "Bat.Neighbor": "{0} piiksub pimeduses {1} poole.",
 
   "Cat.Crazy.StealFood": "{0} varastab sööki!",
   "Dog.Crazy.MultiWoof": "{0} haugub: Auh! Auh! Auh!",
@@ -123,6 +129,11 @@
   "Parrot.Crazy.NoTargets": "Pole kedagi jäljendada.",
   "Raccoon.Crazy.Found": "{0} leidis midagi läikivat ja on vaimustuses!",
   "Turtle.Crazy.Race": "{0} teeb väga aeglase hullu tantsu!",
+  "Lion.Crazy.Roar": "{0} möirgab {1} peale! Kõik ehmuvad!",
+  "Lion.Crazy.NoTargets": "{0} proovib möirgata, kuid kedagi pole läheduses.",
+  "Penguin.Crazy.Slide": "{0} libiseb rõõmsalt jääl!",
+  "Bat.Crazy.Echo.TakeOff": "{0} kasutab kajalokatsiooni ja tõuseb lendu!",
+  "Bat.Crazy.Echo.Land": "{0} klõpsab ja maandub vaikselt.",
 
   "Feeding.Start": "[{0}/{1}] {2} alustab söömist ...",
   "Feeding.Finish": "[{0}/{1}] {2} lõpetas söömise."

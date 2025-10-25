@@ -90,6 +90,9 @@
   "AnimalType.Parrot": "Попугай",
   "AnimalType.Raccoon": "Енот",
   "AnimalType.Turtle": "Черепаха",
+  "AnimalType.Bat": "Летучая мышь",
+  "AnimalType.Lion": "Лев",
+  "AnimalType.Penguin": "Пингвин",
 
   "Cat.Hello": "Мяу! Я кот по имени {0}.",
   "Dog.Hello": "Гав! Я собака по имени {0}.",
@@ -112,6 +115,9 @@
   "Turtle.Neighbor": "Черепаха медленно кивает новичку.",
   "Eagle.Neighbor.Bird": "Орел заметил другую птицу и пронзительно крикнул.",
   "Eagle.Neighbor.Other": "Орел наблюдает за новичком с высоты.",
+  "Lion.Neighbor": "{0} величественно кивает {1}.",
+  "Penguin.Neighbor": "{0} переваливаясь приветствует {1}.",
+  "Bat.Neighbor": "{0} попискивает на {1} в темноте.",
 
   "Cat.Crazy.StealFood": "{0} крадёт еду!",
   "Dog.Crazy.MultiWoof": "{0} лает: ГАВ! ГАВ! ГАВ!",
@@ -124,6 +130,11 @@
   "Parrot.Crazy.NoTargets": "Некого мимикрировать.",
   "Raccoon.Crazy.Found": "{0} нашёл что-то блестящее и в восторге!",
   "Turtle.Crazy.Race": "{0} устраивает очень медленный безумный танец!",
+  "Lion.Crazy.Roar": "{0} громко рычит на {1}! Все вздрогнули!",
+  "Lion.Crazy.NoTargets": "{0} пытается зарычать, но рядом никого нет.",
+  "Penguin.Crazy.Slide": "{0} весело скользит по льду!",
+  "Bat.Crazy.Echo.TakeOff": "{0} издаёт ультразвук и взмывает в воздух!",
+  "Bat.Crazy.Echo.Land": "{0} щёлкает и мягко приземляется.",
 
   "Feeding.Start": "[{0}/{1}] {2} начинает есть ...",
   "Feeding.Finish": "[{0}/{1}] {2} закончил есть."

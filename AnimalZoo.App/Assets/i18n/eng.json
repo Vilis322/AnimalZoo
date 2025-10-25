@@ -90,6 +90,9 @@
   "AnimalType.Parrot": "Parrot",
   "AnimalType.Raccoon": "Raccoon",
   "AnimalType.Turtle": "Turtle",
+  "AnimalType.Bat": "Bat",
+  "AnimalType.Lion": "Lion",
+  "AnimalType.Penguin": "Penguin",
 
   "Cat.Hello": "Meow! I am a cat named {0}.",
   "Dog.Hello": "Woof! I am a dog named {0}.",
@@ -112,6 +115,9 @@
   "Turtle.Neighbor": "The turtle slowly nods to the newcomer.",
   "Eagle.Neighbor.Bird": "The eagle spots another bird and lets out a sharp screech.",
   "Eagle.Neighbor.Other": "The eagle watches the newcomer from above.",
+  "Lion.Neighbor": "{0} nods regally to {1}.",
+  "Penguin.Neighbor": "{0} wobbles to greet {1}.",
+  "Bat.Neighbor": "{0} chitters at {1} in the dark.",
 
   "Cat.Crazy.StealFood": "{0} steals the food!",
   "Dog.Crazy.MultiWoof": "{0} barks WOOF! WOOF! WOOF!",
@@ -124,7 +130,11 @@
   "Parrot.Crazy.NoTargets": "No one to mimic.",
   "Raccoon.Crazy.Found": "{0} found something shiny and is thrilled!",
   "Turtle.Crazy.Race": "{0} does a very slow crazy dance!",
-  
+  "Lion.Crazy.Roar": "{0} roars at {1}! Startled!",
+  "Lion.Crazy.NoTargets": "{0} tries to roar, but no one is around.",
+  "Penguin.Crazy.Slide": "{0} slides gleefully on the ice!",
+  "Bat.Crazy.Echo.TakeOff": "{0} uses echolocation and takes off!",
+  "Bat.Crazy.Echo.Land": "{0} clicks and lands quietly.",
 
   "Feeding.Start": "[{0}/{1}] {2} starts eating ...",
   "Feeding.Finish": "[{0}/{1}] {2} finished eating."
