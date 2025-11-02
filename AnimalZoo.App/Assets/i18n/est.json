@@ -60,6 +60,7 @@
   "Alerts.SoundError": "Heli esitamise viga: {0}",
   "Alerts.NameMissing": "Looma ei saa luua nime sisestamata. Palun sisesta nimi!",
   "Alerts.AlreadyFed": "Sa juba söötsid looma, ta ei ole praegu näljane.",
+  "Alerts.NoHungryAnimals": "Kõik loomad on juba söödatud ja ei ole praegu näljased.",
   "Alerts.SleepingNoCrazy": "{0} magab ega saa praegu hullata.",
   "Alerts.NothingCrazy": "{0}l ei ole midagi hullu teha.",
   "Alerts.SleepingNoFly": "{0} magab ega saa lennata.",

@@ -61,6 +61,7 @@
   "Alerts.SoundError": "Ошибка воспроизведения звука: {0}",
   "Alerts.NameMissing": "Нельзя создать животное без имени. Введите имя!",
   "Alerts.AlreadyFed": "Вы уже кормили животное, сейчас оно не голодно.",
+  "Alerts.NoHungryAnimals": "Все животные уже накормлены и сейчас не голодны.",
   "Alerts.SleepingNoCrazy": "{0} спит и не может творить безумие.",
   "Alerts.NothingCrazy": "{0} нечего делать безумного.",
   "Alerts.SleepingNoFly": "{0} спит и не может летать.",

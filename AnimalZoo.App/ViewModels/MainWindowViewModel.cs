@@ -272,7 +272,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         // Enclosure events
         _enclosure.AnimalJoinedInSameEnclosure += OnAnimalJoinedInSameEnclosure;
         _enclosure.FoodDropped += (_, e) =>
-            LogEntries.Add(string.Format(_loc["Log.FoodDropped"], e.When.ToShortTimeString()));
+            LogEntries.Insert(0, string.Format(_loc["Log.FoodDropped"], e.When.ToShortTimeString()));
 
         SelectedAnimal = Animals.FirstOrDefault();
 
@@ -290,10 +290,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         // ChangeLanguageCommand intentionally not initialized (nullable) - selection is via ComboBox.
 
         // Localized timeline logs
-        HappyEvent   += a => LogEntries.Add(string.Format(_loc["Log.Happy"], a.Name));
-        GamingEvent  += a => LogEntries.Add(string.Format(_loc["Log.Gaming"], a.Name));
-        NightEvent   += a => LogEntries.Add(string.Format(_loc["Log.Night"], a.Name));
-        HungryEvent  += a => LogEntries.Add(string.Format(_loc["Log.Hungry"], a.Name));
+        HappyEvent   += a => LogEntries.Insert(0, string.Format(_loc["Log.Happy"], a.Name));
+        GamingEvent  += a => LogEntries.Insert(0, string.Format(_loc["Log.Gaming"], a.Name));
+        NightEvent   += a => LogEntries.Insert(0, string.Format(_loc["Log.Night"], a.Name));
+        HungryEvent  += a => LogEntries.Insert(0, string.Format(_loc["Log.Hungry"], a.Name));
 
         RebuildIdList();
         UpdateStats();
@@ -376,7 +376,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         AnimalIds.Add(animal.Identifier);
 
         var typeName = LocalizeAnimalType(animal.GetType().Name);
-        LogEntries.Add(string.Format(_loc["Log.Added"], animal.Name, typeName));
+        LogEntries.Insert(0, string.Format(_loc["Log.Added"], animal.Name, typeName));
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
@@ -396,7 +396,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (idx >= 0) AnimalIds.RemoveAt(idx);
 
         SelectedAnimal = Animals.FirstOrDefault();
-        LogEntries.Add(string.Format(_loc["Log.Removed"], name));
+        LogEntries.Insert(0, string.Format(_loc["Log.Removed"], name));
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
@@ -406,7 +406,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (SelectedAnimal is null) return;
 
         var sound = SelectedAnimal.MakeSound();
-        LogEntries.Add($"{SelectedAnimal.Name}: {sound}");
+        LogEntries.Insert(0, $"{SelectedAnimal.Name}: {sound}");
 
         try
         {
@@ -430,7 +430,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
 
         var food = string.IsNullOrWhiteSpace(FoodInput) ? _loc["Labels.Food"].ToLowerInvariant() : FoodInput.Trim();
-        LogEntries.Add(string.Format(_loc["Log.AteFood"], SelectedAnimal.Name, food));
+        LogEntries.Insert(0, string.Format(_loc["Log.AteFood"], SelectedAnimal.Name, food));
         FoodInput = string.Empty;
 
         StartPostFeedSequence(SelectedAnimal);
@@ -453,14 +453,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             var text = actor.ActCrazy(Animals.ToList());
             if (!string.IsNullOrWhiteSpace(text))
             {
-                LogEntries.Add(text);   // animals already return localized strings
+                // Animals already return localized strings
+                LogEntries.Insert(0, text);
                 AlertRequested?.Invoke(text);
             }
         }
         else
         {
             var msg = string.Format(_loc["Alerts.NothingCrazy"], SelectedAnimal.Name);
-            LogEntries.Add(msg);
+            LogEntries.Insert(0, msg);
             AlertRequested?.Invoke(msg);
         }
 
@@ -541,7 +542,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (nowFlying != wasFlying)
             {
                 var key = nowFlying ? "Log.FlyStart" : "Log.FlyStop";
-                LogEntries.Add(string.Format(_loc[key], SelectedAnimal.Name));
+                LogEntries.Insert(0, string.Format(_loc[key], SelectedAnimal.Name));
             }
         }
 
@@ -554,6 +555,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (_isFeeding) return;
 
+        // Check if any animals are hungry before starting the feeding process
+        if (!Animals.Any(a => a.Mood == AnimalMood.Hungry))
+        {
+            AlertRequested?.Invoke(_loc["Alerts.NoHungryAnimals"]);
+            return;
+        }
+
         _isFeeding = true;
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
 
@@ -561,7 +569,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         try
         {
             await _enclosure.DropFoodAsync(
-                s => LogEntries.Add(s),
+                s => LogEntries.Insert(0, s),
                 onAte: animal =>
                 {
                     if (animal.Mood == AnimalMood.Hungry)
@@ -571,7 +579,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     }
                     else
                     {
-                        LogEntries.Add(string.Format(_loc["Log.IgnoredFood"], animal.Name));
+                        LogEntries.Insert(0, string.Format(_loc["Log.IgnoredFood"], animal.Name));
                     }
                 }
             );
@@ -650,7 +658,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             var reaction = resident.OnNeighborJoined(e.Newcomer);
             if (!string.IsNullOrWhiteSpace(reaction))
-                LogEntries.Add(reaction);
+                LogEntries.Insert(0, reaction);
         }
     }
 
@@ -776,7 +784,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (toRemove != null)
         {
             LogEntries.Remove(toRemove);
-            SelectedLogEntry = LogEntries.LastOrDefault();
+            // After removal, keep selection at the top (newest entry first).
+            SelectedLogEntry = LogEntries.FirstOrDefault();
         }
     }
 
@@ -847,7 +856,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             a.SetMood(AnimalMood.Hungry);
         }
 
-        LogEntries.Add(_loc["Log.ResetAllHungry"]);
+        LogEntries.Insert(0, _loc["Log.ResetAllHungry"]);
 
         if (SelectedAnimal is not null)
             UpdateCurrentImage();
