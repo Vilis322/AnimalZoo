@@ -39,9 +39,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     // --- Localization service ---
     private readonly ILocalizationService _loc = Loc.Instance;
 
+    // --- Logger ---
+    private readonly ILogger? _logger;
+
     // UI-visible collections
     public ObservableCollection<Animal> Animals { get; } = new();
-    public ObservableCollection<string> LogEntries { get; } = new();
+    public ObservableCollection<LocalizableLogEntry> LogEntries { get; } = new();
     public ObservableCollection<string> AnimalIds { get; } = new();
 
     // Stats (table + lists)
@@ -55,7 +58,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     }
 
     // Repo + enclosure
-    private readonly IRepository<Animal> _repo = new InMemoryRepository<Animal>();
+    private readonly IAnimalsRepository _animalsRepo;
+    private readonly IEnclosureRepository _enclosureRepo;
     private readonly Enclosure<Animal> _enclosure = new();
 
     // Timeline events
@@ -73,6 +77,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     // Feeding guard
     private bool _isFeeding;
+
+    // Loading guard (prevents false greetings during database load)
+    private bool _isLoadingFromDatabase;
 
     // IDs panel visibility
     private bool _isIdListVisible;
@@ -116,8 +123,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private string? _selectedLogEntry;
-    public string? SelectedLogEntry
+    private LocalizableLogEntry? _selectedLogEntry;
+    public LocalizableLogEntry? SelectedLogEntry
     {
         get => _selectedLogEntry;
         set { if (_selectedLogEntry != value) { _selectedLogEntry = value; OnPropertyChanged(); } }
@@ -200,8 +207,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     // Headers proxy (Type/Count/AverageAge)
     public LabelsProxy Labels { get; }
 
-    public MainWindowViewModel()
+    /// <summary>
+    /// Initializes a new instance with optional dependency injection.
+    /// Falls back to InMemoryRepository if no repositories are provided.
+    /// </summary>
+    public MainWindowViewModel(IAnimalsRepository? animalsRepo = null, IEnclosureRepository? enclosureRepo = null, ILogger? logger = null)
     {
+        _animalsRepo = animalsRepo ?? new InMemoryRepositoryAdapter();
+        _enclosureRepo = enclosureRepo ?? new InMemoryEnclosureRepositoryAdapter();
+        _logger = logger;
+
         Labels = new LabelsProxy(_loc);
 
         // --- Initialize language options (shown in ComboBox) ---
@@ -260,19 +275,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             UpdateStats();
         };
 
-        // Seed demo
-        var cat = new Cat("Murr", 3);
-        var dog = new Dog("Rex", 5);
-        var bird = new Bird("Kiwi", 1);
-
-        AddAnimal(cat);
-        AddAnimal(dog);
-        AddAnimal(bird);
-
         // Enclosure events
         _enclosure.AnimalJoinedInSameEnclosure += OnAnimalJoinedInSameEnclosure;
         _enclosure.FoodDropped += (_, e) =>
-            LogEntries.Insert(0, string.Format(_loc["Log.FoodDropped"], e.When.ToShortTimeString()));
+            LogEntries.Insert(0, new LocalizableLogEntry("Log.FoodDropped", e.When.ToShortTimeString()));
+
+        // Load existing animals from database
+        LoadAnimalsFromDatabase();
 
         SelectedAnimal = Animals.FirstOrDefault();
 
@@ -290,10 +299,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         // ChangeLanguageCommand intentionally not initialized (nullable) - selection is via ComboBox.
 
         // Localized timeline logs
-        HappyEvent   += a => LogEntries.Insert(0, string.Format(_loc["Log.Happy"], a.Name));
-        GamingEvent  += a => LogEntries.Insert(0, string.Format(_loc["Log.Gaming"], a.Name));
-        NightEvent   += a => LogEntries.Insert(0, string.Format(_loc["Log.Night"], a.Name));
-        HungryEvent  += a => LogEntries.Insert(0, string.Format(_loc["Log.Hungry"], a.Name));
+        HappyEvent   += a => LogEntries.Insert(0, new LocalizableLogEntry("Log.Happy", a.Name));
+        GamingEvent  += a => LogEntries.Insert(0, new LocalizableLogEntry("Log.Gaming", a.Name));
+        NightEvent   += a => LogEntries.Insert(0, new LocalizableLogEntry("Log.Night", a.Name));
+        HungryEvent  += a => LogEntries.Insert(0, new LocalizableLogEntry("Log.Hungry", a.Name));
 
         RebuildIdList();
         UpdateStats();
@@ -369,14 +378,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        _repo.Add(animal);
+        _animalsRepo.Save(animal);
+        _enclosureRepo.AssignToEnclosure(animal.UniqueId, "Main");
         _enclosure.Add(animal);
         Animals.Add(animal);
 
         AnimalIds.Add(animal.Identifier);
 
         var typeName = LocalizeAnimalType(animal.GetType().Name);
-        LogEntries.Insert(0, string.Format(_loc["Log.Added"], animal.Name, typeName));
+        LogEntries.Insert(0, new LocalizableLogEntry("Log.Added", animal.Name, typeName));
+        _logger?.LogInfo($"Added animal: {animal.Name} ({typeName})");
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
@@ -386,8 +397,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (SelectedAnimal is null) return;
         CancelFlow(SelectedAnimal);
         var name = SelectedAnimal.Name;
+        var uniqueId = SelectedAnimal.UniqueId;
 
-        _repo.Remove(SelectedAnimal);
+        _animalsRepo.Delete(uniqueId);
+        _enclosureRepo.RemoveFromEnclosure(uniqueId);
         _enclosure.Remove(SelectedAnimal);
 
         var idStr = SelectedAnimal.Identifier;
@@ -396,7 +409,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (idx >= 0) AnimalIds.RemoveAt(idx);
 
         SelectedAnimal = Animals.FirstOrDefault();
-        LogEntries.Insert(0, string.Format(_loc["Log.Removed"], name));
+        LogEntries.Insert(0, new LocalizableLogEntry("Log.Removed", name));
+        _logger?.LogInfo($"Removed animal: {name}");
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
     }
@@ -406,7 +420,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (SelectedAnimal is null) return;
 
         var sound = SelectedAnimal.MakeSound();
-        LogEntries.Insert(0, $"{SelectedAnimal.Name}: {sound}");
+        LogEntries.Insert(0, new LocalizableLogEntry($"{SelectedAnimal.Name}: {sound}"));
 
         try
         {
@@ -430,7 +444,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
 
         var food = string.IsNullOrWhiteSpace(FoodInput) ? _loc["Labels.Food"].ToLowerInvariant() : FoodInput.Trim();
-        LogEntries.Insert(0, string.Format(_loc["Log.AteFood"], SelectedAnimal.Name, food));
+        LogEntries.Insert(0, new LocalizableLogEntry("Log.AteFood", SelectedAnimal.Name, food));
         FoodInput = string.Empty;
 
         StartPostFeedSequence(SelectedAnimal);
@@ -453,15 +467,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             var text = actor.ActCrazy(Animals.ToList());
             if (!string.IsNullOrWhiteSpace(text))
             {
-                // Animals already return localized strings
-                LogEntries.Insert(0, text);
+                // Animals already return localized strings - store as static
+                LogEntries.Insert(0, new LocalizableLogEntry(text));
                 AlertRequested?.Invoke(text);
             }
         }
         else
         {
             var msg = string.Format(_loc["Alerts.NothingCrazy"], SelectedAnimal.Name);
-            LogEntries.Insert(0, msg);
+            LogEntries.Insert(0, new LocalizableLogEntry(msg));
             AlertRequested?.Invoke(msg);
         }
 
@@ -542,7 +556,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (nowFlying != wasFlying)
             {
                 var key = nowFlying ? "Log.FlyStart" : "Log.FlyStop";
-                LogEntries.Insert(0, string.Format(_loc[key], SelectedAnimal.Name));
+                LogEntries.Insert(0, new LocalizableLogEntry(key, SelectedAnimal.Name));
             }
         }
 
@@ -569,7 +583,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         try
         {
             await _enclosure.DropFoodAsync(
-                s => LogEntries.Insert(0, s),
+                s => LogEntries.Insert(0, new LocalizableLogEntry(s)),
                 onAte: animal =>
                 {
                     if (animal.Mood == AnimalMood.Hungry)
@@ -579,7 +593,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     }
                     else
                     {
-                        LogEntries.Insert(0, string.Format(_loc["Log.IgnoredFood"], animal.Name));
+                        LogEntries.Insert(0, new LocalizableLogEntry("Log.IgnoredFood", animal.Name));
                     }
                 }
             );
@@ -654,11 +668,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private void OnAnimalJoinedInSameEnclosure(object? sender, AnimalJoinedEventArgs e)
     {
+        // Skip greetings during initial database load to prevent false triggers
+        if (_isLoadingFromDatabase)
+            return;
+
         foreach (var resident in e.CurrentResidents)
         {
             var reaction = resident.OnNeighborJoined(e.Newcomer);
             if (!string.IsNullOrWhiteSpace(reaction))
-                LogEntries.Insert(0, reaction);
+                LogEntries.Insert(0, new LocalizableLogEntry(reaction));
         }
     }
 
@@ -737,7 +755,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         HungryStats.Clear();
         OldestStat = string.Empty;
 
-        var animals = _repo.GetAll().ToList();
+        var animals = _animalsRepo.GetAll().ToList();
         if (animals.Count == 0) return;
 
         foreach (var row in animals
@@ -856,11 +874,60 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             a.SetMood(AnimalMood.Hungry);
         }
 
-        LogEntries.Insert(0, _loc["Log.ResetAllHungry"]);
+        LogEntries.Insert(0, new LocalizableLogEntry("Log.ResetAllHungry"));
 
         if (SelectedAnimal is not null)
             UpdateCurrentImage();
 
         UpdateStats();
+    }
+
+    /// <summary>
+    /// Loads all animals from the database and populates the UI collections.
+    /// Called during initialization to restore the previous state.
+    /// </summary>
+    private void LoadAnimalsFromDatabase()
+    {
+        try
+        {
+            // Set loading flag to prevent false greeting triggers
+            _isLoadingFromDatabase = true;
+
+            var animalsFromDb = _animalsRepo.GetAll().ToList();
+
+            foreach (var animal in animalsFromDb)
+            {
+                // Add to UI collection (without saving to DB again)
+                Animals.Add(animal);
+
+                // Add to enclosure (greetings are suppressed during loading)
+                _enclosure.Add(animal);
+
+                // Add to ID list
+                AnimalIds.Add(animal.Identifier);
+
+                // Log the loaded animal
+                _logger?.LogInfo($"Loaded animal from database: {animal.Name} ({animal.GetType().Name})");
+            }
+
+            if (animalsFromDb.Count > 0)
+            {
+                LogEntries.Insert(0, new LocalizableLogEntry($"Loaded {animalsFromDb.Count} animal(s) from database"));
+                _logger?.LogInfo($"Successfully loaded {animalsFromDb.Count} animals from database");
+            }
+
+            UpdateStats();
+        }
+        catch (Exception ex)
+        {
+            // If database loading fails, log the error but don't crash the app
+            LogEntries.Insert(0, new LocalizableLogEntry($"Failed to load animals from database: {ex.Message}"));
+            _logger?.LogError($"Failed to load animals from database", ex);
+        }
+        finally
+        {
+            // Clear loading flag so new animals can trigger greetings
+            _isLoadingFromDatabase = false;
+        }
     }
 }
