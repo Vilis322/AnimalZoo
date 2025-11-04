@@ -134,7 +134,6 @@ AnimalZoo/
 ---
 
 ## **Quick Start**
-## 🚀 Quick Start
 
 ```bash
 # Clone repository
