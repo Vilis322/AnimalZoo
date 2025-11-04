@@ -9,252 +9,320 @@
     Title="Animal Zoo"
     mc:Ignorable="d">
 
-  <Grid RowDefinitions="Auto,* ,Auto" ColumnDefinitions="*,2*">
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,2*" Background="#F5F5F5">
     <!-- HEADER -->
-    <TextBlock Grid.ColumnSpan="2" Margin="12" FontSize="20" FontWeight="SemiBold"
-               Text="Animal Zoo" />
+    <Border Grid.ColumnSpan="2" Background="#2E7D32" Padding="12">
+      <TextBlock FontSize="22" FontWeight="Bold" Foreground="White"
+                 Text="Animal Zoo" HorizontalAlignment="Center" />
+    </Border>
 
     <!-- LEFT: Animals list + actions -->
-    <StackPanel Grid.Row="1" Grid.Column="0" Margin="12" Spacing="8">
-      <TextBlock Text="{Binding TextAnimalsHeader}" FontWeight="SemiBold" />
-      <ListBox ItemsSource="{Binding Animals}"
-               SelectedItem="{Binding SelectedAnimal}"
-               MaxHeight="380">
-        <ListBox.ItemTemplate>
-          <DataTemplate>
-            <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="4,6">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="{Binding Name}" />
-                <TextBlock Text="(" Opacity="0.6"/>
-                <TextBlock Text="{Binding Age}" Opacity="0.6"/>
-                <!-- CHANGED: localized age suffix instead of hardcoded ' y.o.)' -->
-                <TextBlock Opacity="0.6"
-                           Text="{Binding DataContext.TextAgeListSuffix,
-                                          RelativeSource={RelativeSource AncestorType=Window}}"/>
-              </StackPanel>
-            </Border>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
+    <Border Grid.Row="1" Grid.Column="0" Margin="8" Background="White"
+            BorderBrush="#CCC" BorderThickness="1" CornerRadius="8" Padding="12">
+      <StackPanel Spacing="10">
+        <TextBlock Text="{Binding TextAnimalsHeader}" FontWeight="SemiBold"
+                   FontSize="16" Foreground="#2E7D32" />
 
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button MinWidth="110" Click="OnAddAnimalClick">
-          <TextBlock Text="{Binding TextAddAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-        <Button MinWidth="140" Command="{Binding RemoveAnimalCommand}">
-          <TextBlock Text="{Binding TextRemoveAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-      </StackPanel>
-
-      <!-- Enclosure actions -->
-      <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-        <Button MinWidth="160" Command="{Binding DropFoodCommand}">
-          <TextBlock Text="{Binding TextDropFoodFull}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-        <Button MinWidth="220" Command="{Binding RefreshStatsCommand}">
-          <TextBlock Text="{Binding TextRefreshStatsFull}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-      </StackPanel>
-    </StackPanel>
-
-    <!-- RIGHT: Details + Actions + Stats -->
-    <StackPanel Grid.Row="1" Grid.Column="1" Margin="12" Spacing="10">
-      <TextBlock Text="{Binding TextDetailsHeader}" FontWeight="SemiBold" />
-
-      <!-- Toggle IDs + Language switch row -->
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <Button Grid.Column="0"
-                Command="{Binding ToggleIdListCommand}"
-                HorizontalAlignment="Left"
-                MinWidth="120">
-          <TextBlock Text="{Binding TextToggleIds}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-        <Border Grid.Column="1"/>
-        <!-- Language ComboBox (vertical list of languages) -->
-        <ComboBox Grid.Column="2"
-                  ItemsSource="{Binding LanguageOptions}"
-                  SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
-                  MinWidth="80"
-                  HorizontalAlignment="Right"
-                  ToolTip.Tip="Change language">
-          <ComboBox.ItemTemplate>
+        <ListBox ItemsSource="{Binding Animals}"
+                 SelectedItem="{Binding SelectedAnimal}"
+                 MaxHeight="380"
+                 Background="Transparent"
+                 BorderThickness="0">
+          <ListBox.ItemTemplate>
             <DataTemplate>
-              <TextBlock Text="{Binding Display}" />
+              <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="6,8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                  <TextBlock Text="(" Opacity="0.6"/>
+                  <TextBlock Text="{Binding Age}" Opacity="0.6"/>
+                  <TextBlock Opacity="0.6"
+                             Text="{Binding DataContext.TextAgeListSuffix,
+                                            RelativeSource={RelativeSource AncestorType=Window}}"/>
+                </StackPanel>
+              </Border>
             </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
-      </Grid>
+          </ListBox.ItemTemplate>
+        </ListBox>
 
-      <!-- IDs panel (scrollable, collapsible) -->
-      <Border IsVisible="{Binding IsIdListVisible}"
-              BorderBrush="#444" BorderThickness="1" CornerRadius="6"
-              Padding="8" Background="#101010" >
-        <Grid RowDefinitions="Auto,*">
-          <TextBlock Text="{Binding TextAnimalIdsHeader}" FontWeight="SemiBold" Margin="0,0,0,6"/>
-          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="180">
-            <ItemsControl ItemsSource="{Binding AnimalIds}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="2,4">
-                    <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </ScrollViewer>
-        </Grid>
-      </Border>
+        <!-- Animal management buttons - stacked vertically to prevent overlap -->
+        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+          <Button Grid.Row="0" Grid.Column="0" Click="OnAddAnimalClick"
+                  Background="#4CAF50" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextAddAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+          <Button Grid.Row="0" Grid.Column="1" Command="{Binding RemoveAnimalCommand}"
+                  Background="#F44336" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextRemoveAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
 
-      <!-- Animal image -->
-      <Border Padding="6" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Margin="0,0,0,6">
-        <Image Source="{Binding CurrentImage}"
-               Height="160"
-               Stretch="Uniform"
-               HorizontalAlignment="Center"/>
-      </Border>
-
-      <!-- DETAILS CARD -->
-      <Border Padding="10" BorderBrush="#DDD" BorderThickness="1" CornerRadius="6">
-        <!-- CHANGED: added an extra row for Type (between Name and Age) -->
-        <Grid ColumnDefinitions="Auto,10,*" RowDefinitions="Auto,Auto,Auto,Auto">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding TextNameColon}"/>
-          <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedAnimal.Name}"/>
-
-          <!-- NEW: Type row -->
-          <TextBlock Grid.Row="1" Grid.Column="0"
-                     Text="{Binding Labels.Type, StringFormat='{}{0}:'}"/>
-          <TextBlock Grid.Row="1" Grid.Column="2"
-                     Text="{Binding SelectedAnimalTypeL10n}"/>
-
-          <!-- moved Age/State one row down -->
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding TextAgeColon}"/>
-          <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAnimal.Age}"/>
-
-          <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding TextStateColon}"/>
-          <!-- CHANGED earlier: localized state line (name removed; shows mood + fly status if applicable) -->
-          <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedAnimalStateL10n}"/>
-        </Grid>
-      </Border>
-
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button MinWidth="120" Command="{Binding MakeSoundCommand}">
-          <TextBlock Text="{Binding TextMakeSound}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-        <Button MinWidth="120" Command="{Binding CrazyActionCommand}">
-          <TextBlock Text="{Binding TextCrazyAction}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-        <Button MinWidth="150" Command="{Binding ToggleFlyCommand}">
-          <TextBlock Text="{Binding TextToggleFly}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-      </StackPanel>
-
-      <!-- FEED with embedded clear button -->
-      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
-        <Grid>
-          <TextBox
-                   Watermark="{Binding TextFoodLabel}"
-                   Text="{Binding FoodInput, Mode=TwoWay}" />
-          <Button
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Center"
-                  Margin="0,0,6,0"
-                  Padding="6,0"
-                  Command="{Binding ClearFoodCommand}"
-                  ToolTip.Tip="Clear input">
-            <TextBlock Text="×"/>
+          <!-- Enclosure actions on second row -->
+          <Button Grid.Row="1" Grid.Column="0" Command="{Binding DropFoodCommand}"
+                  Background="#FF9800" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextDropFood}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+          <Button Grid.Row="1" Grid.Column="1" Command="{Binding RefreshStatsCommand}"
+                  Background="#2196F3" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextRefreshStats}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
         </Grid>
-        <Button Grid.Column="1"
-                Margin="8,0,0,0"
-                Command="{Binding FeedCommand}"
-                MinWidth="120">
-          <TextBlock Text="{Binding TextFeed}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-      </Grid>
-
-      <!-- LOG action row -->
-      <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8" Margin="0,10,0,0">
-        <TextBlock Text="{Binding TextLogHeader}" FontWeight="SemiBold" />
-        <Button MinWidth="120"
-                Command="{Binding RemoveLogEntryByValueCommand}"
-                CommandParameter="{Binding SelectedLogEntry}">
-          <TextBlock Text="{Binding TextDeleteSelected}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-        <Button MinWidth="100" Command="{Binding ClearLogCommand}">
-          <TextBlock Text="{Binding TextClearLog}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
       </StackPanel>
+    </Border>
 
-      <!-- LOG list -->
-      <ListBox ItemsSource="{Binding LogEntries}"
-               SelectedItem="{Binding SelectedLogEntry}"
-               MaxHeight="160">
-        <ListBox.ItemTemplate>
-          <DataTemplate>
-            <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="6,6">
-              <TextBlock Text="{Binding .}" TextWrapping="Wrap" />
+    <!-- RIGHT: Details + Actions + Stats -->
+    <Border Grid.Row="1" Grid.Column="1" Margin="8" Background="White"
+            BorderBrush="#CCC" BorderThickness="1" CornerRadius="8" Padding="12">
+      <StackPanel Spacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{Binding TextDetailsHeader}" FontWeight="SemiBold"
+                     FontSize="16" Foreground="#2E7D32" VerticalAlignment="Center" />
+
+          <!-- Language ComboBox -->
+          <ComboBox Grid.Column="1"
+                    ItemsSource="{Binding LanguageOptions}"
+                    SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                    MinWidth="80"
+                    Background="#FFF"
+                    ToolTip.Tip="Change language">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Display}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </Grid>
+
+        <!-- Toggle IDs button -->
+        <Button Command="{Binding ToggleIdListCommand}"
+                Background="#9C27B0" Foreground="White"
+                HorizontalAlignment="Stretch">
+          <TextBlock Text="{Binding TextToggleIds}" TextAlignment="Center" TextWrapping="Wrap"/>
+        </Button>
+
+        <!-- IDs panel (scrollable, collapsible) -->
+        <Border IsVisible="{Binding IsIdListVisible}"
+                BorderBrush="#9C27B0" BorderThickness="2" CornerRadius="6"
+                Padding="10" Background="#F3E5F5">
+          <Grid RowDefinitions="Auto,*">
+            <TextBlock Text="{Binding TextAnimalIdsHeader}" FontWeight="SemiBold"
+                       Foreground="#9C27B0" Margin="0,0,0,8"/>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="150">
+              <ItemsControl ItemsSource="{Binding AnimalIds}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
+                      <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+
+        <!-- Animal image -->
+        <Border Padding="8" BorderBrush="#2E7D32" BorderThickness="2" CornerRadius="8"
+                Background="#E8F5E9">
+          <Image Source="{Binding CurrentImage}"
+                 Height="140"
+                 Stretch="Uniform"
+                 HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- DETAILS CARD -->
+        <Border Padding="12" BorderBrush="#2196F3" BorderThickness="2" CornerRadius="8"
+                Background="#E3F2FD">
+          <Grid ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding TextNameColon}"
+                       FontWeight="SemiBold" Foreground="#1976D2"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedAnimal.Name}"
+                       FontWeight="Medium"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       Text="{Binding Labels.Type, StringFormat='{}{0}:'}"
+                       FontWeight="SemiBold" Foreground="#1976D2"/>
+            <TextBlock Grid.Row="1" Grid.Column="2"
+                       Text="{Binding SelectedAnimalTypeL10n}"
+                       FontWeight="Medium"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding TextAgeColon}"
+                       FontWeight="SemiBold" Foreground="#1976D2"/>
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAnimal.Age}"
+                       FontWeight="Medium"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding TextStateColon}"
+                       FontWeight="SemiBold" Foreground="#1976D2"/>
+            <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedAnimalStateL10n}"
+                       FontWeight="Medium"/>
+          </Grid>
+        </Border>
+
+        <!-- Action buttons - Grid layout to prevent overlap -->
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+          <Button Grid.Column="0" Command="{Binding MakeSoundCommand}"
+                  Background="#00BCD4" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextMakeSound}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+          <Button Grid.Column="1" Command="{Binding CrazyActionCommand}"
+                  Background="#E91E63" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextCrazyAction}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+          <Button Grid.Column="2" Command="{Binding ToggleFlyCommand}"
+                  Background="#673AB7" Foreground="White"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextToggleFly}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+        </Grid>
+
+        <!-- FEED with embedded clear button -->
+        <Border BorderBrush="#FF9800" BorderThickness="2" CornerRadius="8"
+                Padding="10" Background="#FFF3E0">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="1"
+                    CornerRadius="4" Background="White">
+              <Grid>
+                <TextBox Watermark="{Binding TextFoodLabel}"
+                         Text="{Binding FoodInput, Mode=TwoWay}"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         Padding="8,6"/>
+                <Button HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="0,0,6,0"
+                        Padding="8,4"
+                        Command="{Binding ClearFoodCommand}"
+                        Background="Transparent"
+                        ToolTip.Tip="Clear input">
+                  <TextBlock Text="×" FontSize="18" FontWeight="Bold"/>
+                </Button>
+              </Grid>
             </Border>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
+            <Button Grid.Column="1"
+                    Command="{Binding FeedCommand}"
+                    Background="#FF9800" Foreground="White"
+                    Padding="16,8"
+                    HorizontalAlignment="Stretch">
+              <TextBlock Text="{Binding TextFeed}" TextAlignment="Center" TextWrapping="Wrap"/>
+            </Button>
+          </Grid>
+        </Border>
 
-      <!-- STATS -->
-      <TextBlock Text="{Binding TextStatsHeader}" FontWeight="SemiBold" Margin="0,8,0,0"/>
-
-      <!-- Scrollable stats block -->
-      <!-- CHANGED: slightly smaller fixed height to keep the frame above the bottom; scroll remains enabled -->
-      <Border Padding="8" BorderBrush="#EEE" BorderThickness="1" CornerRadius="6" Height="220">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <StackPanel Spacing="6">
-
-            <!-- Header -->
-            <Grid ColumnDefinitions="2*,*,*" Margin="0,0,0,4">
-              <TextBlock Grid.Column="0" Text="{Binding Labels.Type}" FontWeight="SemiBold" d:Text="Type"/>
-              <TextBlock Grid.Column="1" Text="{Binding Labels.Count}" FontWeight="SemiBold" d:Text="Count"/>
-              <TextBlock Grid.Column="2" Text="{Binding Labels.AverageAge}" FontWeight="SemiBold" d:Text="Average age"/>
+        <!-- LOG section -->
+        <Border BorderBrush="#795548" BorderThickness="2" CornerRadius="8"
+                Padding="10" Background="#EFEBE9">
+          <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+              <TextBlock Text="{Binding TextLogHeader}" FontWeight="SemiBold"
+                         FontSize="14" Foreground="#5D4037" VerticalAlignment="Center" />
+              <Button Grid.Column="1"
+                      Command="{Binding RemoveLogEntryByValueCommand}"
+                      CommandParameter="{Binding SelectedLogEntry}"
+                      Background="#F44336" Foreground="White"
+                      Padding="10,4">
+                <TextBlock Text="{Binding TextDeleteSelected}" TextAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+              </Button>
+              <Button Grid.Column="2" Command="{Binding ClearLogCommand}"
+                      Background="#757575" Foreground="White"
+                      Padding="10,4">
+                <TextBlock Text="{Binding TextClearLog}" TextAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
+              </Button>
             </Grid>
 
-            <!-- Rows with horizontal separators -->
-            <ItemsControl ItemsSource="{Binding ByTypeStats}">
-              <ItemsControl.ItemTemplate>
+            <!-- LOG list -->
+            <ListBox ItemsSource="{Binding LogEntries}"
+                     SelectedItem="{Binding SelectedLogEntry}"
+                     MaxHeight="140"
+                     Background="White"
+                     BorderBrush="#D7CCC8"
+                     BorderThickness="1">
+              <ListBox.ItemTemplate>
                 <DataTemplate>
-                  <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="2,4">
-                    <Grid ColumnDefinitions="2*,*,*">
-                      <TextBlock Grid.Column="0" Text="{Binding Type}"/>
-                      <TextBlock Grid.Column="1" Text="{Binding Count}"/>
-                      <TextBlock Grid.Column="2" Text="{Binding AverageAge, StringFormat='{}{0:F1}'}"/>
-                    </Grid>
+                  <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="8,6">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
                   </Border>
                 </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <!-- Hungry list -->
-            <TextBlock Text="{Binding TextHungryHeader}" FontWeight="SemiBold" Margin="0,8,0,0"/>
-            <ItemsControl ItemsSource="{Binding HungryStats}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="2,4">
-                    <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <!-- Oldest -->
-            <TextBlock Text="{Binding TextOldestHeader}" FontWeight="SemiBold" Margin="0,8,0,0"/>
-            <Border BorderBrush="#333" BorderThickness="0,0,0,1" Padding="2,4">
-              <TextBlock Text="{Binding OldestStat}" TextWrapping="Wrap"/>
-            </Border>
-
+              </ListBox.ItemTemplate>
+            </ListBox>
           </StackPanel>
-        </ScrollViewer>
-      </Border>
-    </StackPanel>
+        </Border>
+
+        <!-- STATS section -->
+        <Border BorderBrush="#009688" BorderThickness="2" CornerRadius="8"
+                Padding="10" Background="#E0F2F1">
+          <StackPanel Spacing="8">
+            <TextBlock Text="{Binding TextStatsHeader}" FontWeight="SemiBold"
+                       FontSize="14" Foreground="#00695C"/>
+
+            <!-- Scrollable stats block -->
+            <Border Background="White" BorderBrush="#B2DFDB" BorderThickness="1"
+                    CornerRadius="4" Padding="8" Height="200">
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="8">
+
+                  <!-- Header -->
+                  <Grid ColumnDefinitions="2*,*,*" Margin="0,0,0,4">
+                    <TextBlock Grid.Column="0" Text="{Binding Labels.Type}"
+                               FontWeight="SemiBold" Foreground="#00796B" d:Text="Type"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Labels.Count}"
+                               FontWeight="SemiBold" Foreground="#00796B" d:Text="Count"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Labels.AverageAge}"
+                               FontWeight="SemiBold" Foreground="#00796B" d:Text="Average age"/>
+                  </Grid>
+
+                  <!-- Rows with horizontal separators -->
+                  <ItemsControl ItemsSource="{Binding ByTypeStats}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
+                          <Grid ColumnDefinitions="2*,*,*">
+                            <TextBlock Grid.Column="0" Text="{Binding Type}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Count}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding AverageAge, StringFormat='{}{0:F1}'}"/>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Hungry list -->
+                  <TextBlock Text="{Binding TextHungryHeader}" FontWeight="SemiBold"
+                             Foreground="#00796B" Margin="0,8,0,4"/>
+                  <ItemsControl ItemsSource="{Binding HungryStats}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
+                          <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Oldest -->
+                  <TextBlock Text="{Binding TextOldestHeader}" FontWeight="SemiBold"
+                             Foreground="#00796B" Margin="0,8,0,4"/>
+                  <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
+                    <TextBlock Text="{Binding OldestStat}" TextWrapping="Wrap"/>
+                  </Border>
+
+                </StackPanel>
+              </ScrollViewer>
+            </Border>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Border>
 
     <!-- FOOTER -->
-    <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="12"
-               Opacity="0.7"
-               Text="{Binding TextFooterTips}" />
+    <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#455A64" Padding="10">
+      <TextBlock Foreground="White" FontSize="12" Opacity="0.9"
+                 Text="{Binding TextFooterTips}"
+                 HorizontalAlignment="Center"
+                 TextWrapping="Wrap" />
+    </Border>
   </Grid>
 </Window>
