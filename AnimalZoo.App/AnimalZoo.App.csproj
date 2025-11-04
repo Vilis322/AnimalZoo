@@ -16,12 +16,19 @@
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.7" />
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.7" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.7" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.10" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
         <PackageReference Include="System.Windows.Extensions" Version="9.0.0" />
     </ItemGroup>
 
     <ItemGroup>
         <None Update="App.axaml">
             <Generator>MSBuild:Compile</Generator>
+        </None>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>

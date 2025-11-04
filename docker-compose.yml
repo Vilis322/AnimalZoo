@@ -1,0 +1,85 @@
+# Docker Compose configuration for AnimalZoo SQL Server 2022
+# Provides persistent database storage with automatic restart policy
+# Compatible with Apple Silicon (M1/M2) via platform specification
+
+services:
+  sqlserver:
+    # SQL Server 2022 latest image
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+    # Apple Silicon compatibility (M1/M2 Macs)
+    platform: linux/amd64
+
+    # Container name (must match DOCKER_NAME in Makefile)
+    container_name: ${DOCKER_NAME:-animalzoo-sqlserver}
+
+    # Restart policy: always restart unless explicitly stopped
+    restart: unless-stopped
+
+    # Environment variables for SQL Server configuration
+    environment:
+      # Accept End-User License Agreement
+      ACCEPT_EULA: "Y"
+
+      # SA (System Administrator) password
+      # Must be at least 8 characters with uppercase, lowercase, numbers, and symbols
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-YourStrong@Passw0rd}
+
+      # Enable SQL Server Agent
+      MSSQL_AGENT_ENABLED: "true"
+
+      # Set collation for better compatibility
+      MSSQL_COLLATION: SQL_Latin1_General_CP1_CI_AS
+
+      # Configure memory limit (2GB)
+      MSSQL_MEMORY_LIMIT_MB: 2048
+
+    # Port mapping: host:container
+    # Maps host port to SQL Server default port 1433
+    ports:
+      - "${DB_PORT:-1433}:1433"
+
+    # Volume mapping for persistent data storage
+    # Single volume for all SQL Server data (macOS compatible)
+    # Data persists even when container is removed (unless using 'docker compose down -v')
+    volumes:
+      # Single named volume for all SQL Server data
+      - sqlserver_data:/var/opt/mssql
+
+    # Health check to verify SQL Server is ready
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # Resource limits to prevent excessive resource consumption
+    deploy:
+      resources:
+        limits:
+          # Maximum CPU usage (2 cores)
+          cpus: '2.0'
+          # Maximum memory usage (4GB)
+          memory: 4G
+        reservations:
+          # Minimum CPU reservation
+          cpus: '0.5'
+          # Minimum memory reservation (1GB)
+          memory: 1G
+
+    # Network configuration
+    networks:
+      - animalzoo-network
+
+# Named volumes for persistent data storage
+volumes:
+  # Single volume for all SQL Server data (data, logs, backups)
+  # Using a single volume avoids permission issues on macOS
+  sqlserver_data:
+    driver: local
+
+# Custom network for potential future service additions
+networks:
+  animalzoo-network:
+    driver: bridge
