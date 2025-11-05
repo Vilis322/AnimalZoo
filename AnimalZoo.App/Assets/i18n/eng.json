@@ -57,6 +57,7 @@
   "Log.ResetAllHungry": "All animals reset to Hungry (via Refresh Stats).",
   "Log.FlyStart": "{0} is flying.",
   "Log.FlyStop": "{0} perched.",
+  "Log.LoadedAnimals": "Loaded {0} animal(s) from database.",
 
   "Alerts.SoundError": "Sound playback error: {0}",
   "Alerts.NameMissing": "Unable to create an animal without a name. Please enter the animal's name!",
@@ -137,6 +138,19 @@
   "Penguin.Crazy.Slide": "{0} slides gleefully on the ice!",
   "Bat.Crazy.Echo.TakeOff": "{0} uses echolocation and takes off!",
   "Bat.Crazy.Echo.Land": "{0} clicks and lands quietly.",
+
+  "Sound.Bird": "{0}: Chirp!",
+  "Sound.Cat": "{0}: Meow!",
+  "Sound.Dog": "{0}: Woof!",
+  "Sound.Eagle": "{0}: Screech!",
+  "Sound.Fox": "{0}: Ring-ding-ding!",
+  "Sound.Monkey": "{0}: Oo-oo-aa-aa!",
+  "Sound.Parrot": "{0}: Squawk!",
+  "Sound.Raccoon": "{0}: Chrrr!",
+  "Sound.Turtle": "{0}: ...",
+  "Sound.Bat": "{0}: Screech!",
+  "Sound.Lion": "{0}: Roar!",
+  "Sound.Penguin": "{0}: Honk!",
 
   "Feeding.Start": "[{0}/{1}] {2} starts eating ...",
   "Feeding.Finish": "[{0}/{1}] {2} finished eating."

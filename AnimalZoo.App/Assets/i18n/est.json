@@ -53,9 +53,10 @@
   "Log.EagleLand": "{0} voltis tiivad ja istus.",
   "Log.ParrotFly": "{0} LENDAB ja kisab „TSIRP!!!“",
   "Log.ParrotLand": "{0} maandub sujuvalt.",
-  "Log.ResetAllHungry": "Kõik loomad seati „Näljane“ olekusse (läbi „Värskenda statistikat“).",
+  "Log.ResetAllHungry": "Kõik loomad seati „Näljane" olekusse (läbi „Värskenda statistikat").",
   "Log.FlyStart": "{0} lendab.",
   "Log.FlyStop": "{0} maandus.",
+  "Log.LoadedAnimals": "Laaditud {0} looma andmebaasist.",
 
   "Alerts.SoundError": "Heli esitamise viga: {0}",
   "Alerts.NameMissing": "Looma ei saa luua nime sisestamata. Palun sisesta nimi!",
@@ -136,6 +137,19 @@
   "Penguin.Crazy.Slide": "{0} libiseb rõõmsalt jääl!",
   "Bat.Crazy.Echo.TakeOff": "{0} kasutab kajalokatsiooni ja tõuseb lendu!",
   "Bat.Crazy.Echo.Land": "{0} klõpsab ja maandub vaikselt.",
+
+  "Sound.Bird": "{0}: Tsirp!",
+  "Sound.Cat": "{0}: Mjäu!",
+  "Sound.Dog": "{0}: Auh!",
+  "Sound.Eagle": "{0}: Kiiks!",
+  "Sound.Fox": "{0}: Hau-hau-hau!",
+  "Sound.Monkey": "{0}: U-u-u-a-a!",
+  "Sound.Parrot": "{0}: Kraak!",
+  "Sound.Raccoon": "{0}: Chrrr!",
+  "Sound.Turtle": "{0}: ...",
+  "Sound.Bat": "{0}: Kriiks!",
+  "Sound.Lion": "{0}: Möirr!",
+  "Sound.Penguin": "{0}: Honk!",
 
   "Feeding.Start": "[{0}/{1}] {2} alustab söömist ...",
   "Feeding.Finish": "[{0}/{1}] {2} lõpetas söömise."
