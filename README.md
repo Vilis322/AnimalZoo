@@ -119,6 +119,7 @@ For detailed setup instructions, Docker management, and database operations, see
 - **[QUICK_START.md](./QUICK_START.md)** - Complete setup guide with and without Make
 - **[MAKE.md](./MAKE.md)** - All available Make commands
 - **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Database initialization and schema details
+- - **[IMPLEMENTATION_DB_SUMMARY.md](./IMPLEMENTATION_DB_SUMMARY.md)** - Architecture details
 
  ---
 
