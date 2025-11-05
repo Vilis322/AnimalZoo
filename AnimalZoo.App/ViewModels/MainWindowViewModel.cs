@@ -89,7 +89,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         set { if (_isIdListVisible != value) { _isIdListVisible = value; OnPropertyChanged(); } }
     }
 
+    // Stats panel visibility
+    private bool _isStatsVisible;
+    public bool IsStatsVisible
+    {
+        get => _isStatsVisible;
+        set { if (_isStatsVisible != value) { _isStatsVisible = value; OnPropertyChanged(); } }
+    }
+
     public ICommand ToggleIdListCommand { get; }
+    public ICommand ToggleStatsCommand { get; }
 
     /// <summary>Selected animal.</summary>
     public Animal? SelectedAnimal
@@ -246,6 +255,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(TextDropFood));
             OnPropertyChanged(nameof(TextRefreshStats));
             OnPropertyChanged(nameof(TextToggleIds));
+            OnPropertyChanged(nameof(TextToggleStats));
             OnPropertyChanged(nameof(TextLanguageButton));
             OnPropertyChanged(nameof(TextFoodLabel));
 
@@ -296,6 +306,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         DropFoodCommand               = new RelayCommand(async () => await DropFoodAsync(), () => !_isFeeding && Animals.Count > 0);
         RefreshStatsCommand           = new RelayCommand(ResetAllToHungryAndRefresh);
         ToggleIdListCommand           = new RelayCommand(() => IsIdListVisible = !IsIdListVisible);
+        ToggleStatsCommand            = new RelayCommand(() => IsStatsVisible = !IsStatsVisible);
         // ChangeLanguageCommand intentionally not initialized (nullable) - selection is via ComboBox.
 
         // Localized timeline logs
@@ -317,6 +328,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public string TextDropFood         => _loc["Buttons.DropFood"];
     public string TextRefreshStats     => _loc["Buttons.RefreshStats"];
     public string TextToggleIds        => _loc["Buttons.ToggleIds"];
+    public string TextToggleStats      => _loc["Buttons.ToggleStats"];
     public string TextLanguageButton   => _loc["Buttons.Language"];
     public string TextFoodLabel        => _loc["Labels.Food"];
 
@@ -882,6 +894,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     /// </summary>
     private void ResetAllToHungryAndRefresh()
     {
+        // First, add the summary log entry (will be at the top)
+        LogEntries.Insert(0, new LocalizableLogEntry("Log.ResetAllHungry"));
+
         foreach (var a in Animals.ToList())
         {
             // Stop any running state machine
@@ -902,9 +917,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             }
 
             a.SetMood(AnimalMood.Hungry);
+            HungryEvent?.Invoke(a);  // Invoke event to log individual animal state changes
         }
-
-        LogEntries.Insert(0, new LocalizableLogEntry("Log.ResetAllHungry"));
 
         if (SelectedAnimal is not null)
             UpdateCurrentImage();
