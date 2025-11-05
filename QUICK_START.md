@@ -4,13 +4,18 @@ This guide shows you how to set up and run the AnimalZoo application with databa
 
 ## Prerequisites
 
+### macOS/Linux
+
 1. **Install Docker Desktop**
 
+   macOS:
    ```bash
    brew install --cask docker
    ```
 
-   Then launch Docker Desktop from Applications and wait for it to start.
+   Linux: Download from [docker.com](https://docs.docker.com/desktop/install/linux-install/)
+
+   Then launch Docker Desktop and wait for it to start.
 
 2. **Verify Docker is Running**
 
@@ -18,18 +23,42 @@ This guide shows you how to set up and run the AnimalZoo application with databa
    docker --version
    ```
 
+### Windows
+
+1. **Install Docker Desktop**
+
+   Download and install from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+
+   After installation, launch Docker Desktop and wait for it to start.
+
+2. **Verify Docker is Running**
+
+   Open PowerShell or Command Prompt:
+   ```powershell
+   docker --version
+   ```
+
+3. **Note on Make Commands**
+
+   Windows doesn't have `make` by default. You can either:
+   - **Option A**: Use WSL (Windows Subsystem for Linux) and follow macOS/Linux instructions
+   - **Option B**: Use PowerShell/CMD and follow "Method B: Manual Commands" below
+   - **Option C**: Install `make` via Chocolatey: `choco install make`
+
 ---
 
 ## Setup Methods
 
 Choose one of two methods:
 
-- **Method A**: Using Make commands (recommended, easiest)
-- **Method B**: Using manual Docker and dotnet commands
+- **Method A**: Using Make commands (recommended for macOS/Linux or Windows with WSL)
+- **Method B**: Using manual Docker and dotnet commands (recommended for Windows)
 
 ---
 
-## Method A: Using Make Commands (Recommended)
+## Method A: Using Make Commands
+
+> **For**: macOS, Linux, or Windows with WSL/make installed
 
 ### Quick 3-Step Setup
 
@@ -58,13 +87,20 @@ See `MAKE.md` for detailed documentation of all make commands.
 
 ## Method B: Using Manual Commands
 
+> **For**: All platforms (Windows, macOS, Linux)
+
 ### Step 1: Start SQL Server
 
 **Using Docker Compose** (recommended):
 
+> **Windows users**: Use PowerShell or Command Prompt for all commands below
+
 ```bash
 # Copy environment variables template
+# macOS/Linux:
 cp .env.example .env
+# Windows (PowerShell):
+# copy .env.example .env
 
 # Start SQL Server with Docker Compose
 docker compose up -d
@@ -448,12 +484,19 @@ The application falls back to in-memory storage if the database is unavailable.
 ### Build Fails
 
 ```bash
-# Clean and rebuild
-make clean && make build    # With Make
+# Clean and rebuild with Make (macOS/Linux/WSL)
+make clean && make build
 
-# Or manually
+# Or manually:
 dotnet clean AnimalZoo.sln
+
+# macOS/Linux:
 rm -rf **/bin **/obj
+
+# Windows (PowerShell):
+# Get-ChildItem -Path . -Include bin,obj -Recurse | Remove-Item -Recurse -Force
+
+# Then build:
 dotnet build AnimalZoo.sln
 ```
 
@@ -461,10 +504,12 @@ dotnet build AnimalZoo.sln
 
 ## Tips
 
-- **Logs Location**: `AnimalZoo.App/bin/Debug/net9.0/logs/`
+- **Logs Location**:
+  - macOS/Linux: `AnimalZoo.App/bin/Debug/net9.0/logs/`
+  - Windows: `AnimalZoo.App\bin\Debug\net9.0\logs\`
 - **Database Volume**: Data persists in Docker volume `animalzoo_sqlserver_data`
-- **Azure Data Studio**: Use for visual database management
-- **Hot Reload**: Changes to code require rebuild (`make build`)
+- **Azure Data Studio**: Use for visual database management (available for all platforms)
+- **Hot Reload**: Changes to code require rebuild (`make build` or `dotnet build`)
 
 ---
 
@@ -487,18 +532,26 @@ dotnet build AnimalZoo.sln
 
 ## Summary
 
-**Quickest Path** (with Make):
+### macOS/Linux (Quickest Path with Make)
 ```bash
 make docker-up && make docker-init && make run
 ```
 
-**Manual Path** (without Make):
+### Windows / All Platforms (Manual Path)
 ```bash
+# Copy .env file (Windows: use 'copy .env.example .env')
+cp .env.example .env
+
+# Start database
 docker compose up -d
+
+# Initialize database
 docker cp database-init.sql animalzoo-sqlserver:/database-init.sql
 docker exec animalzoo-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "YourStrong@Passw0rd" -C \
   -i /database-init.sql
+
+# Run application
 dotnet run --project AnimalZoo.App/AnimalZoo.App.csproj
 ```
 
