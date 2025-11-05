@@ -125,6 +125,7 @@
   "Cat.Crazy.StealFood": "{0} крадёт еду!",
   "Dog.Crazy.MultiWoof": "{0} лает: ГАВ! ГАВ! ГАВ!",
   "Bird.Crazy.Flying": "{0} безумно кружит в полёте!",
+  "Bird.Crazy.Landing": "{0} садится после безумного полёта.",
   "Eagle.Crazy.Flying": "{0} делает дерзкое пике!",
   "Eagle.Crazy.Landing": "{0} садится после дерзкого пике.",
   "Fox.Crazy.Steal": "{0} хитро стащила перекус!",
