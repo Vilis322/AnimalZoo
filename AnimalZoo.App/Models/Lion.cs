@@ -66,7 +66,7 @@ namespace AnimalZoo.App.Models
             }
         }
 
-        public override string OnNeighborJoined(Animal newcomer)
-            => string.Format(Loc.Instance["Lion.Neighbor"], Name, newcomer.Name);
+        public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+            => new NeighborReaction("Lion.Neighbor", Name, newcomer.Name);
     }
 }

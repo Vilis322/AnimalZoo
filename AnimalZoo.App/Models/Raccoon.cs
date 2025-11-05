@@ -27,6 +27,6 @@ public sealed class Raccoon : Animal, ICrazyAction
         return string.Format(Loc.Instance["Raccoon.Crazy.Found"], Name, item);
     }
 
-    public override string OnNeighborJoined(Animal newcomer)
-        => string.Format(Loc.Instance["Raccoon.Neighbor"], Name, newcomer.Name);
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => new NeighborReaction("Raccoon.Neighbor");
 }

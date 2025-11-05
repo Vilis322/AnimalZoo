@@ -9,7 +9,49 @@
     Title="Animal Zoo"
     mc:Ignorable="d">
 
-  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,2*" Background="#F5F5F5">
+  <Window.Styles>
+    <!-- Button hover styles - darken on hover instead of making transparent -->
+    <Style Selector="Button.green-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#388E3C"/>
+    </Style>
+    <Style Selector="Button.red-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#D32F2F"/>
+    </Style>
+    <Style Selector="Button.blue-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1976D2"/>
+    </Style>
+    <Style Selector="Button.orange-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#F57C00"/>
+    </Style>
+    <Style Selector="Button.cyan-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#0097A7"/>
+    </Style>
+    <Style Selector="Button.pink-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#C2185B"/>
+    </Style>
+    <Style Selector="Button.purple-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#512DA8"/>
+    </Style>
+    <Style Selector="Button.dark-purple-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#7B1FA2"/>
+    </Style>
+    <Style Selector="Button.gray-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#616161"/>
+    </Style>
+
+    <!-- ComboBox styles - ensure text is always visible -->
+    <Style Selector="ComboBox">
+      <Setter Property="Foreground" Value="Black"/>
+    </Style>
+    <Style Selector="ComboBox /template/ ContentPresenter#ContentPresenter">
+      <Setter Property="Foreground" Value="Black"/>
+    </Style>
+    <Style Selector="ComboBox:pointerover /template/ ContentPresenter#ContentPresenter">
+      <Setter Property="Foreground" Value="Black"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,2*" Background="#E0E0E0">
     <!-- HEADER -->
     <Border Grid.ColumnSpan="2" Background="#2E7D32" Padding="12">
       <TextBlock FontSize="22" FontWeight="Bold" Foreground="White"
@@ -32,10 +74,10 @@
             <DataTemplate>
               <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="6,8">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <TextBlock Text="{Binding Name}" FontWeight="Medium" />
-                  <TextBlock Text="(" Opacity="0.6"/>
-                  <TextBlock Text="{Binding Age}" Opacity="0.6"/>
-                  <TextBlock Opacity="0.6"
+                  <TextBlock Text="{Binding Name}" FontWeight="Medium" Foreground="Black" />
+                  <TextBlock Text="(" Opacity="0.6" Foreground="Black"/>
+                  <TextBlock Text="{Binding Age}" Opacity="0.6" Foreground="Black"/>
+                  <TextBlock Opacity="0.6" Foreground="Black"
                              Text="{Binding DataContext.TextAgeListSuffix,
                                             RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
@@ -48,25 +90,29 @@
         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
           <Button Grid.Row="0" Grid.Column="0" Click="OnAddAnimalClick"
                   Background="#4CAF50" Foreground="White"
+                  Classes="green-btn"
                   HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding TextAddAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
-          <Button Grid.Row="0" Grid.Column="1" Command="{Binding RemoveAnimalCommand}"
-                  Background="#F44336" Foreground="White"
+          <Button Grid.Row="0" Grid.Column="1" Command="{Binding RefreshStatsCommand}"
+                  Background="#2196F3" Foreground="White"
+                  Classes="blue-btn"
                   HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding TextRemoveAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding TextRefreshStats}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
 
           <!-- Enclosure actions on second row -->
-          <Button Grid.Row="1" Grid.Column="0" Command="{Binding DropFoodCommand}"
+          <Button Grid.Row="1" Grid.Column="0" Command="{Binding RemoveAnimalCommand}"
+                  Background="#F44336" Foreground="White"
+                  Classes="red-btn"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextRemoveAnimal}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+          <Button Grid.Row="1" Grid.Column="1" Command="{Binding DropFoodCommand}"
                   Background="#FF9800" Foreground="White"
+                  Classes="orange-btn"
                   HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding TextDropFood}" TextAlignment="Center" TextWrapping="Wrap"/>
-          </Button>
-          <Button Grid.Row="1" Grid.Column="1" Command="{Binding RefreshStatsCommand}"
-                  Background="#2196F3" Foreground="White"
-                  HorizontalAlignment="Stretch">
-            <TextBlock Text="{Binding TextRefreshStats}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
         </Grid>
       </StackPanel>
@@ -86,6 +132,8 @@
                     SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
                     MinWidth="80"
                     Background="#FFF"
+                    BorderBrush="#2E7D32"
+                    BorderThickness="2"
                     ToolTip.Tip="Change language">
             <ComboBox.ItemTemplate>
               <DataTemplate>
@@ -98,6 +146,7 @@
         <!-- Toggle IDs button -->
         <Button Command="{Binding ToggleIdListCommand}"
                 Background="#9C27B0" Foreground="White"
+                Classes="dark-purple-btn"
                 HorizontalAlignment="Stretch">
           <TextBlock Text="{Binding TextToggleIds}" TextAlignment="Center" TextWrapping="Wrap"/>
         </Button>
@@ -114,7 +163,7 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
-                      <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
+                      <TextBlock Text="{Binding .}" TextWrapping="Wrap" Foreground="Black"/>
                     </Border>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -139,24 +188,24 @@
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding TextNameColon}"
                        FontWeight="SemiBold" Foreground="#1976D2"/>
             <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding SelectedAnimal.Name}"
-                       FontWeight="Medium"/>
+                       FontWeight="Medium" Foreground="Black"/>
 
             <TextBlock Grid.Row="1" Grid.Column="0"
                        Text="{Binding Labels.Type, StringFormat='{}{0}:'}"
                        FontWeight="SemiBold" Foreground="#1976D2"/>
             <TextBlock Grid.Row="1" Grid.Column="2"
                        Text="{Binding SelectedAnimalTypeL10n}"
-                       FontWeight="Medium"/>
+                       FontWeight="Medium" Foreground="Black"/>
 
             <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding TextAgeColon}"
                        FontWeight="SemiBold" Foreground="#1976D2"/>
             <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding SelectedAnimal.Age}"
-                       FontWeight="Medium"/>
+                       FontWeight="Medium" Foreground="Black"/>
 
             <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding TextStateColon}"
                        FontWeight="SemiBold" Foreground="#1976D2"/>
             <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding SelectedAnimalStateL10n}"
-                       FontWeight="Medium"/>
+                       FontWeight="Medium" Foreground="Black"/>
           </Grid>
         </Border>
 
@@ -164,16 +213,19 @@
         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
           <Button Grid.Column="0" Command="{Binding MakeSoundCommand}"
                   Background="#00BCD4" Foreground="White"
+                  Classes="cyan-btn"
                   HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding TextMakeSound}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
           <Button Grid.Column="1" Command="{Binding CrazyActionCommand}"
                   Background="#E91E63" Foreground="White"
+                  Classes="pink-btn"
                   HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding TextCrazyAction}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
           <Button Grid.Column="2" Command="{Binding ToggleFlyCommand}"
                   Background="#673AB7" Foreground="White"
+                  Classes="purple-btn"
                   HorizontalAlignment="Stretch">
             <TextBlock Text="{Binding TextToggleFly}" TextAlignment="Center" TextWrapping="Wrap"/>
           </Button>
@@ -205,6 +257,7 @@
             <Button Grid.Column="1"
                     Command="{Binding FeedCommand}"
                     Background="#FF9800" Foreground="White"
+                    Classes="orange-btn"
                     Padding="16,8"
                     HorizontalAlignment="Stretch">
               <TextBlock Text="{Binding TextFeed}" TextAlignment="Center" TextWrapping="Wrap"/>
@@ -223,11 +276,13 @@
                       Command="{Binding RemoveLogEntryByValueCommand}"
                       CommandParameter="{Binding SelectedLogEntry}"
                       Background="#F44336" Foreground="White"
+                      Classes="red-btn"
                       Padding="10,4">
                 <TextBlock Text="{Binding TextDeleteSelected}" TextAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
               </Button>
               <Button Grid.Column="2" Command="{Binding ClearLogCommand}"
                       Background="#757575" Foreground="White"
+                      Classes="gray-btn"
                       Padding="10,4">
                 <TextBlock Text="{Binding TextClearLog}" TextAlignment="Center" TextWrapping="Wrap" FontSize="12"/>
               </Button>
@@ -243,7 +298,7 @@
               <ListBox.ItemTemplate>
                 <DataTemplate>
                   <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="8,6">
-                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Foreground="Black" />
                   </Border>
                 </DataTemplate>
               </ListBox.ItemTemplate>
@@ -280,9 +335,9 @@
                       <DataTemplate>
                         <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
                           <Grid ColumnDefinitions="2*,*,*">
-                            <TextBlock Grid.Column="0" Text="{Binding Type}"/>
-                            <TextBlock Grid.Column="1" Text="{Binding Count}"/>
-                            <TextBlock Grid.Column="2" Text="{Binding AverageAge, StringFormat='{}{0:F1}'}"/>
+                            <TextBlock Grid.Column="0" Text="{Binding Type}" Foreground="Black"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Count}" Foreground="Black"/>
+                            <TextBlock Grid.Column="2" Text="{Binding AverageAge, StringFormat='{}{0:F1}'}" Foreground="Black"/>
                           </Grid>
                         </Border>
                       </DataTemplate>
@@ -296,7 +351,7 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
-                          <TextBlock Text="{Binding .}" TextWrapping="Wrap"/>
+                          <TextBlock Text="{Binding .}" TextWrapping="Wrap" Foreground="Black"/>
                         </Border>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -306,7 +361,7 @@
                   <TextBlock Text="{Binding TextOldestHeader}" FontWeight="SemiBold"
                              Foreground="#00796B" Margin="0,8,0,4"/>
                   <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
-                    <TextBlock Text="{Binding OldestStat}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding OldestStat}" TextWrapping="Wrap" Foreground="Black"/>
                   </Border>
 
                 </StackPanel>

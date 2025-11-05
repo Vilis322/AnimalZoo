@@ -59,10 +59,10 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     }
 
     /// <summary>Reaction to a newcomer in the same enclosure.</summary>
-    public override string OnNeighborJoined(Animal newcomer)
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
     {
         return newcomer is Bird
-            ? string.Format(Loc.Instance["Eagle.Neighbor.Bird"], Name, newcomer.Name)
-            : string.Format(Loc.Instance["Eagle.Neighbor.Other"], Name, newcomer.Name);
+            ? new NeighborReaction("Eagle.Neighbor.Bird")
+            : new NeighborReaction("Eagle.Neighbor.Other");
     }
 }

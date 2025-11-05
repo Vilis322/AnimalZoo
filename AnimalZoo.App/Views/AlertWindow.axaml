@@ -8,25 +8,39 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     x:Class="AnimalZoo.App.Views.AlertWindow"
-    Title="Notice"
     CanResize="False"
     WindowStartupLocation="CenterOwner"
     SizeToContent="WidthAndHeight"
     MaxWidth="560">
 
-    <Border Padding="16">
-        <Grid RowDefinitions="Auto,Auto">
+    <Window.Styles>
+        <!-- Button hover styles - darken on hover instead of making transparent -->
+        <Style Selector="Button.blue-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1976D2"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto" Background="#E0E0E0">
+        <!-- Message content -->
+        <Border Grid.Row="0" Margin="12" Background="White"
+                BorderBrush="#CCC" BorderThickness="1" CornerRadius="8" Padding="16">
             <TextBlock x:Name="MessageText"
                        TextWrapping="Wrap"
                        MaxWidth="520"
-                       Margin="0,0,0,12" />
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                       Foreground="Black" />
+        </Border>
+
+        <!-- Footer button -->
+        <Border Grid.Row="1" Background="#F5F5F5" Padding="12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <!-- Localized OK via DynamicResource -->
                 <Button x:Name="OkButton"
                         MinWidth="80"
                         Click="OnOk"
-                        Content="{DynamicResource Buttons.OK}" />
+                        Content="{DynamicResource Buttons.OK}"
+                        Background="#2196F3" Foreground="White" Padding="10,6"
+                        Classes="blue-btn" />
             </StackPanel>
-        </Grid>
-    </Border>
+        </Border>
+    </Grid>
 </Window>

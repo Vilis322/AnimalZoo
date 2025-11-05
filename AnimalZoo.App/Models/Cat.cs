@@ -14,6 +14,6 @@ public sealed class Cat : Animal, ICrazyAction
     public string ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
         => string.Format(Loc.Instance["Cat.Crazy.StealFood"], Name);
 
-    public override string OnNeighborJoined(Animal newcomer)
-        => string.Format(Loc.Instance["Cat.Neighbor"], Name, newcomer.Name);
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => new NeighborReaction("Cat.Neighbor");
 }

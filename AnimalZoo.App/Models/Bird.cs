@@ -62,6 +62,6 @@ public sealed class Bird : Animal, Flyable, ICrazyAction
         }
     }
 
-    public override string OnNeighborJoined(Animal newcomer)
-        => string.Format(Loc.Instance["Bird.Neighbor"], Name, newcomer.Name);
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => new NeighborReaction("Bird.Neighbor");
 }

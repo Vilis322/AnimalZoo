@@ -73,6 +73,7 @@
 
   "Dialog.AddAnimal.Title": "Добавить животное",
   "Dialog.AddAnimal.Heading": "Создать новое животное",
+  "Dialog.Notice.Title": "Уведомление",
 
   "Mood.Hungry": "Голоден",
   "Mood.Happy": "Доволен",

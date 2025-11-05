@@ -675,8 +675,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         foreach (var resident in e.CurrentResidents)
         {
             var reaction = resident.OnNeighborJoined(e.Newcomer);
-            if (!string.IsNullOrWhiteSpace(reaction))
-                LogEntries.Insert(0, new LocalizableLogEntry(reaction));
+            if (reaction is not null)
+                LogEntries.Insert(0, new LocalizableLogEntry(reaction.LocalizationKey, reaction.Parameters));
         }
     }
 

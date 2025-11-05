@@ -28,7 +28,7 @@ namespace AnimalZoo.App.Models
             return string.Format(Loc.Instance["Penguin.Crazy.Slide"], Name);
         }
 
-        public override string OnNeighborJoined(Animal newcomer)
-            => string.Format(Loc.Instance["Penguin.Neighbor"], Name, newcomer.Name);
+        public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+            => new NeighborReaction("Penguin.Neighbor", Name, newcomer.Name);
     }
 }

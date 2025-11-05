@@ -33,6 +33,6 @@ public sealed class Monkey : Animal, ICrazyAction
         return string.Format(Loc.Instance["Monkey.Crazy.Swap"], Name, originalA, originalB);
     }
 
-    public override string OnNeighborJoined(Animal newcomer)
-        => string.Format(Loc.Instance["Monkey.Neighbor"], Name, newcomer.Name);
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => new NeighborReaction("Monkey.Neighbor");
 }
