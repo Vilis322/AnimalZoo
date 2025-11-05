@@ -386,7 +386,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         AnimalIds.Add(animal.Identifier);
 
         var typeName = LocalizeAnimalType(animal.GetType().Name);
-        LogEntries.Insert(0, new LocalizableLogEntry("Log.Added", animal.Name, typeName));
+        LogEntries.Insert(0, new LocalizableLogEntry("Log.Added", animal.Name, new LocalizationKey($"AnimalType.{animal.GetType().Name}")));
         _logger?.LogInfo($"Added animal: {animal.Name} ({typeName})");
         UpdateStats();
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
@@ -419,12 +419,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (SelectedAnimal is null) return;
 
-        var sound = SelectedAnimal.MakeSound();
-        LogEntries.Insert(0, new LocalizableLogEntry($"{SelectedAnimal.Name}: {sound}"));
+        var typeName = SelectedAnimal.GetType().Name;
+        LogEntries.Insert(0, new LocalizableLogEntry($"Sound.{typeName}", SelectedAnimal.Name));
 
         try
         {
-            var typeName = SelectedAnimal.GetType().Name;
             await SoundService.PlayAnimalVoiceAsync(typeName);
         }
         catch (Exception ex)
@@ -443,7 +442,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        var food = string.IsNullOrWhiteSpace(FoodInput) ? _loc["Labels.Food"].ToLowerInvariant() : FoodInput.Trim();
+        var food = string.IsNullOrWhiteSpace(FoodInput) ? new LocalizationKey("Labels.Food") : (object)FoodInput.Trim();
         LogEntries.Insert(0, new LocalizableLogEntry("Log.AteFood", SelectedAnimal.Name, food));
         FoodInput = string.Empty;
 
@@ -464,12 +463,21 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (SelectedAnimal is ICrazyAction actor)
         {
-            var text = actor.ActCrazy(Animals.ToList());
-            if (!string.IsNullOrWhiteSpace(text))
+            var reaction = actor.ActCrazy(Animals.ToList());
+            if (reaction is not null)
             {
-                // Animals already return localized strings - store as static
-                LogEntries.Insert(0, new LocalizableLogEntry(text));
-                AlertRequested?.Invoke(text);
+                // Store as localizable log entry
+                LogEntries.Insert(0, new LocalizableLogEntry(reaction.LocalizationKey, reaction.Parameters));
+
+                // Show alert with current translation
+                var alertText = string.Format(_loc[reaction.LocalizationKey], reaction.Parameters);
+                AlertRequested?.Invoke(alertText);
+            }
+            else
+            {
+                // Crazy action couldn't be performed (e.g., sleeping, no targets)
+                var msg = string.Format(_loc["Alerts.NothingCrazy"], SelectedAnimal.Name);
+                AlertRequested?.Invoke(msg);
             }
         }
         else
@@ -625,31 +633,53 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         try
         {
+            // Phase 1: ALWAYS start with Happy (5 seconds)
             animal.SetMood(AnimalMood.Happy);
             HappyEvent?.Invoke(animal);
             if (animal == SelectedAnimal) UpdateCurrentImage();
             await Task.Delay(HappyDuration, token);
 
-            var nextIsNight = _random.Next(2) == 0;
+            // Phase 2: Randomly choose Gaming or Sleeping
+            var shouldGame = _random.Next(2) == 0;
 
-            if (nextIsNight)
+            if (shouldGame)
             {
-                animal.SetMood(AnimalMood.Sleeping);
-                NightEvent?.Invoke(animal);
-                if (animal == SelectedAnimal) UpdateCurrentImage();
-                await Task.Delay(NextPhaseDuration, token);
-            }
-            else
-            {
+                // Gaming for 10 seconds
                 animal.SetMood(AnimalMood.Gaming);
                 GamingEvent?.Invoke(animal);
                 if (animal == SelectedAnimal) UpdateCurrentImage();
                 await Task.Delay(NextPhaseDuration, token);
+
+                // After Gaming: ALWAYS go to Sleeping
+                animal.SetMood(AnimalMood.Sleeping);
+                NightEvent?.Invoke(animal);
+                if (animal == SelectedAnimal) UpdateCurrentImage();
+                // Sleeping state remains until refresh stats - no timer
+            }
+            else
+            {
+                // Go directly to Sleeping (skip Gaming)
+                animal.SetMood(AnimalMood.Sleeping);
+                NightEvent?.Invoke(animal);
+                if (animal == SelectedAnimal) UpdateCurrentImage();
+                // Sleeping state remains until refresh stats - no timer
             }
 
-            animal.SetMood(AnimalMood.Hungry);
-            HungryEvent?.Invoke(animal);
-            if (animal == SelectedAnimal) UpdateCurrentImage();
+            // Land flying animals when they fall asleep
+            if (animal is Flyable)
+            {
+                var type = animal.GetType();
+                var isFlyingProp = type.GetProperty("IsFlying", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (isFlyingProp is not null)
+                {
+                    var isFlying = isFlyingProp.GetValue(animal) as bool? ?? false;
+                    if (isFlying)
+                    {
+                        var landMethod = type.GetMethod("Land", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        landMethod?.Invoke(animal, null);
+                    }
+                }
+            }
 
             CancelFlow(animal);
         }
@@ -912,7 +942,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
             if (animalsFromDb.Count > 0)
             {
-                LogEntries.Insert(0, new LocalizableLogEntry($"Loaded {animalsFromDb.Count} animal(s) from database"));
+                LogEntries.Insert(0, new LocalizableLogEntry("Log.LoadedAnimals", animalsFromDb.Count.ToString()));
                 _logger?.LogInfo($"Successfully loaded {animalsFromDb.Count} animals from database");
             }
 
