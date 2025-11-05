@@ -442,7 +442,7 @@ The Makefile uses color-coded output:
 
 ## See Also
 
-- **QUICK_START.md** - Quick setup guide with and without Make
-- **DATABASE_SETUP.md** - Detailed database initialization information
-- **README.md** - Project overview and features
-- **IMPLEMENTATION_SUMMARY.md** - Architecture and design decisions
+- **[QUICK_START.md](./QUICK_START.md)** - Quick setup guide with and without Make
+- **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Detailed database initialization information
+- **[README.md](./README.md)** - Project overview and features
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Architecture and design decisions

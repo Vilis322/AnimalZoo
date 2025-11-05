@@ -406,7 +406,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON Enclosures TO animalzoo_app;
 
 ## See Also
 
-- **QUICK_START.md** - Setup and launch commands
-- **MAKE.md** - Complete make commands reference
-- **IMPLEMENTATION_SUMMARY.md** - Architecture details
-- **README.md** - Project overview and features
+- **[QUICK_START.md](./QUICK_START.md)** - Setup and launch commands
+- **[MAKE.md](./MAKE.md)** - Complete make commands reference
+- **[IMPLEMENTATION_DB_SUMMARY.md](./IMPLEMENTATION_DB_SUMMARY.md)** - Architecture details
+- **[README.md](./README.md)** - Project overview and features
