@@ -53,7 +53,7 @@
   "Log.EagleLand": "{0} voltis tiivad ja istus.",
   "Log.ParrotFly": "{0} LENDAB ja kisab „TSIRP!!!“",
   "Log.ParrotLand": "{0} maandub sujuvalt.",
-  "Log.ResetAllHungry": "Kõik loomad seati „Näljane" olekusse (läbi „Värskenda statistikat").",
+  "Log.ResetAllHungry": "Kõik loomad seati «Näljane» olekusse (läbi «Värskenda statistikat»,).",
   "Log.FlyStart": "{0} lendab.",
   "Log.FlyStop": "{0} maandus.",
   "Log.LoadedAnimals": "Laaditud {0} looma andmebaasist.",
