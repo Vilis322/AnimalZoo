@@ -20,12 +20,13 @@ namespace AnimalZoo.App.Models
         public override string Describe() => string.Format(Loc.Instance["Penguin.Describe"], Name, Age);
 
         /// <summary>
-        /// Slides playfully: switches mood to Happy and returns a localized log/alert line.
+        /// Slides playfully: does NOT change mood (to avoid state machine conflict).
+        /// Returns a localized message.
         /// </summary>
-        public string ActCrazy(List<Animal> allAnimals)
+        public NeighborReaction? ActCrazy(List<Animal> allAnimals)
         {
-            SetMood(AnimalMood.Happy);
-            return string.Format(Loc.Instance["Penguin.Crazy.Slide"], Name);
+            // Do not change mood here to avoid breaking the state machine
+            return new NeighborReaction("Penguin.Crazy.Slide", Name);
         }
 
         public override NeighborReaction? OnNeighborJoined(Animal newcomer)

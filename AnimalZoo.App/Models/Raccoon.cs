@@ -20,11 +20,11 @@ public sealed class Raccoon : Animal, ICrazyAction
     public override string MakeSound() => "Chrrr!";
     public override string Describe() => string.Format(Loc.Instance["Raccoon.Describe"], Name, Age);
 
-    public string ActCrazy(List<Animal> allAnimals)
+    public NeighborReaction? ActCrazy(List<Animal> allAnimals)
     {
         var rnd = new Random();
         var item = ShinyThings[rnd.Next(ShinyThings.Length)];
-        return string.Format(Loc.Instance["Raccoon.Crazy.Found"], Name, item);
+        return new NeighborReaction("Raccoon.Crazy.Found", Name);
     }
 
     public override NeighborReaction? OnNeighborJoined(Animal newcomer)

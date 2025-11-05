@@ -37,15 +37,15 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     public void Fly() => ToggleFly();
 
     /// <summary>Crazy action: dramatic takeoff/landing unless sleeping.</summary>
-    public string ActCrazy(List<Animal> allAnimals)
+    public NeighborReaction? ActCrazy(List<Animal> allAnimals)
     {
         if (Mood == AnimalMood.Sleeping)
-            return string.Format(Loc.Instance["Eagle.Crazy.SleepingNoFly"], Name);
+            return null; // Cannot perform crazy action while sleeping
 
         ToggleFly();
         return IsFlying
-            ? string.Format(Loc.Instance["Eagle.Crazy.Flying"], Name)
-            : string.Format(Loc.Instance["Eagle.Crazy.Landing"], Name);
+            ? new NeighborReaction("Eagle.Crazy.Flying", Name)
+            : new NeighborReaction("Eagle.Crazy.Landing", Name);
     }
 
     /// <summary>Land automatically when going to Sleeping.</summary>

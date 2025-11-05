@@ -15,10 +15,10 @@ public sealed class Monkey : Animal, ICrazyAction
     public override string MakeSound() => "Oo-oo-aa-aa!";
     public override string Describe() => string.Format(Loc.Instance["Monkey.Describe"], Name, Age);
 
-    public string ActCrazy(List<Animal> allAnimals)
+    public NeighborReaction? ActCrazy(List<Animal> allAnimals)
     {
         if (allAnimals is null || allAnimals.Count < 2)
-            return string.Format(Loc.Instance["Monkey.Crazy.NotEnough"], Name);
+            return null; // Not enough animals to swap
 
         var rnd = new Random();
         var a = allAnimals[rnd.Next(allAnimals.Count)];
@@ -30,7 +30,7 @@ public sealed class Monkey : Animal, ICrazyAction
         (a.Name, b.Name) = (b.Name, a.Name);
 
         // Localized message: actor + two names swapped
-        return string.Format(Loc.Instance["Monkey.Crazy.Swap"], Name, originalA, originalB);
+        return new NeighborReaction("Monkey.Crazy.Swap", Name, originalA, originalB);
     }
 
     public override NeighborReaction? OnNeighborJoined(Animal newcomer)

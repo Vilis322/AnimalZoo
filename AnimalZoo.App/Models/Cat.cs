@@ -11,8 +11,8 @@ public sealed class Cat : Animal, ICrazyAction
 
     public override string MakeSound() => "Meow!";
 
-    public string ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
-        => string.Format(Loc.Instance["Cat.Crazy.StealFood"], Name);
+    public NeighborReaction? ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
+        => new NeighborReaction("Cat.Crazy.StealFood", Name);
 
     public override NeighborReaction? OnNeighborJoined(Animal newcomer)
         => new NeighborReaction("Cat.Neighbor");

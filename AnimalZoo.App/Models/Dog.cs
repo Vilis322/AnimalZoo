@@ -17,15 +17,14 @@ public sealed class Dog : Animal, ICrazyAction
     public override string MakeSound() => "Woof!";
 
     /// <summary>
-    /// Crazy action: produces a localized log string and plays a special effect sound.
+    /// Crazy action: produces a localizable message and plays a special effect sound.
     /// </summary>
-    public string ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
+    public NeighborReaction? ActCrazy(System.Collections.Generic.List<Animal> allAnimals)
     {
         // Fire-and-forget effect playback; do not block UI thread
         _ = PlayCrazyEffectAsync();
 
-        // Keep the original localized message
-        return string.Format(Loc.Instance["Dog.Crazy.MultiWoof"], Name);
+        return new NeighborReaction("Dog.Crazy.MultiWoof", Name);
     }
 
     /// <summary>
