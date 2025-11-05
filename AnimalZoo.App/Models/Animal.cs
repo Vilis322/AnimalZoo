@@ -103,8 +103,8 @@ public abstract class Animal : INotifyPropertyChanged
     protected virtual void OnMoodChanged(AnimalMood newMood) { }
 
     /// <summary>Optional hook for enclosure neighbor join event. Override to customize.</summary>
-    public virtual string OnNeighborJoined(Animal newcomer)
-        => $"{Name} notices {newcomer.Name}.";
+    public virtual NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => null; // Default: no reaction
 
     /// <summary>Virtual describe method.</summary>
     public virtual string Describe()

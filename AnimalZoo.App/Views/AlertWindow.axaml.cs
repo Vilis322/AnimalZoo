@@ -13,6 +13,9 @@ public partial class AlertWindow : Window
     {
         InitializeComponent();
 
+        // Set localized title (shown in window title bar)
+        Title = Loc.Instance["Dialog.Notice.Title"];
+
         // Ensure the OK button text is always localized (DynamicResource may not update on new windows)
         var okButton = this.FindControl<Button>("OkButton");
         if (okButton is not null)

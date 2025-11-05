@@ -9,6 +9,7 @@
   "Buttons.DropFood": "Рассыпать еду",
   "Buttons.RefreshStats": "Обновить статистику",
   "Buttons.ToggleIds": "Показать ID",
+  "Buttons.ToggleStats": "LINQ Статистика",
   "Buttons.Language": "RU",
   "Buttons.OK": "ОК",
   "Buttons.Cancel": "Отмена",
@@ -18,7 +19,7 @@
   "Buttons.RefreshStatsFull": "Обновить статистику",
   "Buttons.DeleteSelected": "Удалить выбранное",
 
-  "Labels.Food": "Еда",
+  "Labels.Food": "eдy",
   "Labels.Name": "Имя",
   "Labels.Age": "Возраст",
   "Labels.Type": "Тип",
@@ -57,6 +58,7 @@
   "Log.ResetAllHungry": "Все животные сброшены в состояние «Голоден» (через «Обновить статистику»).",
   "Log.FlyStart": "{0} летит.",
   "Log.FlyStop": "{0} сел.",
+  "Log.LoadedAnimals": "Загружено {0} животных из базы данных.",
 
   "Alerts.SoundError": "Ошибка воспроизведения звука: {0}",
   "Alerts.NameMissing": "Нельзя создать животное без имени. Введите имя!",
@@ -73,6 +75,7 @@
 
   "Dialog.AddAnimal.Title": "Добавить животное",
   "Dialog.AddAnimal.Heading": "Создать новое животное",
+  "Dialog.Notice.Title": "Уведомление",
 
   "Mood.Hungry": "Голоден",
   "Mood.Happy": "Доволен",
@@ -123,6 +126,7 @@
   "Cat.Crazy.StealFood": "{0} крадёт еду!",
   "Dog.Crazy.MultiWoof": "{0} лает: ГАВ! ГАВ! ГАВ!",
   "Bird.Crazy.Flying": "{0} безумно кружит в полёте!",
+  "Bird.Crazy.Landing": "{0} садится после безумного полёта.",
   "Eagle.Crazy.Flying": "{0} делает дерзкое пике!",
   "Eagle.Crazy.Landing": "{0} садится после дерзкого пике.",
   "Fox.Crazy.Steal": "{0} хитро стащила перекус!",
@@ -136,6 +140,19 @@
   "Penguin.Crazy.Slide": "{0} весело скользит по льду!",
   "Bat.Crazy.Echo.TakeOff": "{0} издаёт ультразвук и взмывает в воздух!",
   "Bat.Crazy.Echo.Land": "{0} щёлкает и мягко приземляется.",
+
+  "Sound.Bird": "{0}: Чирик!",
+  "Sound.Cat": "{0}: Мяу!",
+  "Sound.Dog": "{0}: Гав!",
+  "Sound.Eagle": "{0}: Киии!",
+  "Sound.Fox": "{0}: Тяф-тяф-тяф!",
+  "Sound.Monkey": "{0}: У-у-у-а-а!",
+  "Sound.Parrot": "{0}: Карк!",
+  "Sound.Raccoon": "{0}: Хррр!",
+  "Sound.Turtle": "{0}: ...",
+  "Sound.Bat": "{0}: Скрии!",
+  "Sound.Lion": "{0}: Рррр!",
+  "Sound.Penguin": "{0}: Хонк!",
 
   "Feeding.Start": "[{0}/{1}] {2} начинает есть ...",
   "Feeding.Finish": "[{0}/{1}] {2} закончил есть."

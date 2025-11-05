@@ -9,6 +9,7 @@
   "Buttons.DropFood": "Drop food",
   "Buttons.RefreshStats": "Refresh stats",
   "Buttons.ToggleIds": "Show ID's",
+  "Buttons.ToggleStats": "LINQ Stats",
   "Buttons.Language": "ENG",
   "Buttons.OK": "OK",
   "Buttons.Cancel": "Cancel",
@@ -18,7 +19,7 @@
   "Buttons.RefreshStatsFull": "Refresh Stats",
   "Buttons.DeleteSelected": "Delete selected",
 
-  "Labels.Food": "Food",
+  "Labels.Food": "food",
   "Labels.Name": "Name",
   "Labels.Age": "Age",
   "Labels.Type": "Type",
@@ -57,6 +58,7 @@
   "Log.ResetAllHungry": "All animals reset to Hungry (via Refresh Stats).",
   "Log.FlyStart": "{0} is flying.",
   "Log.FlyStop": "{0} perched.",
+  "Log.LoadedAnimals": "Loaded {0} animal(s) from database.",
 
   "Alerts.SoundError": "Sound playback error: {0}",
   "Alerts.NameMissing": "Unable to create an animal without a name. Please enter the animal's name!",
@@ -73,6 +75,7 @@
 
   "Dialog.AddAnimal.Title": "Add Animal",
   "Dialog.AddAnimal.Heading": "Create a new animal",
+  "Dialog.Notice.Title": "Notice",
 
   "Mood.Hungry": "Hungry",
   "Mood.Happy": "Happy",
@@ -123,6 +126,7 @@
   "Cat.Crazy.StealFood": "{0} steals the food!",
   "Dog.Crazy.MultiWoof": "{0} barks WOOF! WOOF! WOOF!",
   "Bird.Crazy.Flying": "{0} goes into crazy flight circles!",
+  "Bird.Crazy.Landing": "{0} lands after crazy flight.",
   "Eagle.Crazy.Flying": "{0} performs a daring dive!",
   "Eagle.Crazy.Landing": "{0} lands after a daring dive.",
   "Fox.Crazy.Steal": "{0} sneakily steals a snack!",
@@ -136,6 +140,19 @@
   "Penguin.Crazy.Slide": "{0} slides gleefully on the ice!",
   "Bat.Crazy.Echo.TakeOff": "{0} uses echolocation and takes off!",
   "Bat.Crazy.Echo.Land": "{0} clicks and lands quietly.",
+
+  "Sound.Bird": "{0}: Chirp!",
+  "Sound.Cat": "{0}: Meow!",
+  "Sound.Dog": "{0}: Woof!",
+  "Sound.Eagle": "{0}: Screech!",
+  "Sound.Fox": "{0}: Ring-ding-ding!",
+  "Sound.Monkey": "{0}: Oo-oo-aa-aa!",
+  "Sound.Parrot": "{0}: Squawk!",
+  "Sound.Raccoon": "{0}: Chrrr!",
+  "Sound.Turtle": "{0}: ...",
+  "Sound.Bat": "{0}: Screech!",
+  "Sound.Lion": "{0}: Roar!",
+  "Sound.Penguin": "{0}: Honk!",
 
   "Feeding.Start": "[{0}/{1}] {2} starts eating ...",
   "Feeding.Finish": "[{0}/{1}] {2} finished eating."

@@ -26,17 +26,17 @@ namespace AnimalZoo.App.Models
 
         /// <summary>
         /// Crazy action: pick a random non-self animal, set it to Sleeping (startled),
-        /// start playing the special crazy action sound, and return a localized log/alert line.
+        /// start playing the special crazy action sound, and return a localizable message.
         /// If no targets are available, returns a localized "no targets" message.
         /// </summary>
-        public string ActCrazy(List<Animal> allAnimals)
+        public NeighborReaction? ActCrazy(List<Animal> allAnimals)
         {
             if (allAnimals is null || allAnimals.Count <= 1)
-                return string.Format(Loc.Instance["Lion.Crazy.NoTargets"], Name);
+                return new NeighborReaction("Lion.Crazy.NoTargets", Name);
 
             var candidates = allAnimals.Where(a => !ReferenceEquals(a, this)).ToList();
             if (candidates.Count == 0)
-                return string.Format(Loc.Instance["Lion.Crazy.NoTargets"], Name);
+                return new NeighborReaction("Lion.Crazy.NoTargets", Name);
 
             var target = candidates[new Random().Next(candidates.Count)];
 
@@ -47,7 +47,7 @@ namespace AnimalZoo.App.Models
             _ = PlayCrazyEffectAsync();
 
             // Localized log/alert line with both names
-            return string.Format(Loc.Instance["Lion.Crazy.Roar"], Name, target.Name);
+            return new NeighborReaction("Lion.Crazy.Roar", Name, target.Name);
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace AnimalZoo.App.Models
             }
         }
 
-        public override string OnNeighborJoined(Animal newcomer)
-            => string.Format(Loc.Instance["Lion.Neighbor"], Name, newcomer.Name);
+        public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+            => new NeighborReaction("Lion.Neighbor", Name, newcomer.Name);
     }
 }

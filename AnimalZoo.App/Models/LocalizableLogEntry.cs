@@ -1,9 +1,24 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using AnimalZoo.App.Localization;
 
 namespace AnimalZoo.App.Models;
+
+/// <summary>
+/// Wrapper for a localization key that should be translated dynamically.
+/// Use this when passing parameters to LocalizableLogEntry that need to be re-translated.
+/// </summary>
+public sealed class LocalizationKey
+{
+    public string Key { get; }
+
+    public LocalizationKey(string key)
+    {
+        Key = key;
+    }
+}
 
 /// <summary>
 /// Represents a log entry that can be localized dynamically.
@@ -50,6 +65,7 @@ public sealed class LocalizableLogEntry : INotifyPropertyChanged
 
     /// <summary>
     /// The display text for this log entry (localized if applicable).
+    /// Supports nested LocalizationKey parameters that are translated dynamically.
     /// </summary>
     public string Text
     {
@@ -64,7 +80,13 @@ public sealed class LocalizableLogEntry : INotifyPropertyChanged
             try
             {
                 var template = _loc[_localizationKey];
-                return _parameters.Length > 0 ? string.Format(template, _parameters) : template;
+
+                // Resolve any LocalizationKey parameters dynamically
+                var resolvedParams = _parameters.Select(p =>
+                    p is LocalizationKey lk ? _loc[lk.Key] : p
+                ).ToArray();
+
+                return resolvedParams.Length > 0 ? string.Format(template, resolvedParams) : template;
             }
             catch
             {

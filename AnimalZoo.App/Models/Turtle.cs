@@ -14,9 +14,9 @@ public sealed class Turtle : Animal, ICrazyAction
 
     public override string Describe() => string.Format(Loc.Instance["Turtle.Describe"], Name, Age);
 
-    public string ActCrazy(List<Animal> allAnimals)
-        => string.Format(Loc.Instance["Turtle.Crazy.Race"], Name);
+    public NeighborReaction? ActCrazy(List<Animal> allAnimals)
+        => new NeighborReaction("Turtle.Crazy.Race", Name);
 
-    public override string OnNeighborJoined(Animal newcomer)
-        => string.Format(Loc.Instance["Turtle.Neighbor"], Name, newcomer.Name);
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => new NeighborReaction("Turtle.Neighbor");
 }

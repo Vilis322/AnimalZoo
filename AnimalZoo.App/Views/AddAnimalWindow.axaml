@@ -14,46 +14,63 @@
     <vm:AddAnimalViewModel/>
   </Window.DataContext>
 
-  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-    <TextBlock Margin="12" FontSize="18" FontWeight="SemiBold"
-               Text="{Binding TextCreateHeading}" />
+  <Window.Styles>
+    <!-- Button hover styles - darken on hover instead of making transparent -->
+    <Style Selector="Button.green-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#388E3C"/>
+    </Style>
+    <Style Selector="Button.gray-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#616161"/>
+    </Style>
+  </Window.Styles>
 
-    <Grid Grid.Row="1" Margin="12"
-          RowDefinitions="Auto,Auto,Auto"
-          ColumnDefinitions="Auto,8,*">
-      <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
-                 Text="{Binding TextNameLabel}"/>
-      <TextBox   Grid.Row="0" Grid.Column="2" Margin="0,0,0,8"
-                 Text="{Binding Name, Mode=TwoWay}"
-                 MinWidth="200"
-                 HorizontalAlignment="Stretch" />
+  <Grid RowDefinitions="*,Auto" ColumnDefinitions="*" Background="#E0E0E0">
+    <!-- Form content -->
+    <Border Grid.Row="0" Margin="12" Background="White"
+            BorderBrush="#CCC" BorderThickness="1" CornerRadius="8" Padding="16">
+      <Grid RowDefinitions="Auto,Auto,Auto"
+            ColumnDefinitions="Auto,8,*">
+        <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
+                   Text="{Binding TextNameLabel}" Foreground="Black" FontWeight="SemiBold"/>
+        <TextBox   Grid.Row="0" Grid.Column="2" Margin="0,0,0,8"
+                   Text="{Binding Name, Mode=TwoWay}"
+                   MinWidth="200"
+                   HorizontalAlignment="Stretch" />
 
-      <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
-                 Text="{Binding TextAgeLabel}"/>
-      <NumericUpDown Grid.Row="1" Grid.Column="2" Margin="0,0,0,8"
-                     Value="{Binding Age, Mode=TwoWay}"
-                     Minimum="0" Maximum="100"
-                     MinWidth="120"
-                     HorizontalAlignment="Left"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
+                   Text="{Binding TextAgeLabel}" Foreground="Black" FontWeight="SemiBold"/>
+        <NumericUpDown Grid.Row="1" Grid.Column="2" Margin="0,0,0,8"
+                       Value="{Binding Age, Mode=TwoWay}"
+                       Minimum="0" Maximum="100"
+                       MinWidth="120"
+                       HorizontalAlignment="Left"/>
 
-      <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
-                 Text="{Binding TextTypeLabel}"/>
-      <ComboBox Grid.Row="2" Grid.Column="2" Margin="0,0,0,8"
-                ItemsSource="{Binding AnimalTypes}"
-                SelectedItem="{Binding SelectedType, Mode=TwoWay}"
-                MinWidth="200"
-                HorizontalAlignment="Stretch">
-        <ComboBox.ItemTemplate>
-          <DataTemplate>
-            <TextBlock Text="{Binding DisplayName}"/>
-          </DataTemplate>
-        </ComboBox.ItemTemplate>
-      </ComboBox>
-    </Grid>
+        <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center"
+                   Text="{Binding TextTypeLabel}" Foreground="Black" FontWeight="SemiBold"/>
+        <ComboBox Grid.Row="2" Grid.Column="2" Margin="0,0,0,8"
+                  ItemsSource="{Binding AnimalTypes}"
+                  SelectedItem="{Binding SelectedType, Mode=TwoWay}"
+                  MinWidth="200"
+                  HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding DisplayName}"/>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </Grid>
+    </Border>
 
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12" Spacing="8">
-      <Button Content="{Binding TextCancel}" Click="OnCancel" MinWidth="90"/>
-      <Button Content="{Binding TextOk}" IsDefault="True" Click="OnOk" MinWidth="90"/>
-    </StackPanel>
+    <!-- Footer buttons -->
+    <Border Grid.Row="1" Background="#F5F5F5" Padding="12">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Content="{Binding TextCancel}" Click="OnCancel" MinWidth="90"
+                Background="#757575" Foreground="White" Padding="10,6"
+                Classes="gray-btn"/>
+        <Button Content="{Binding TextOk}" IsDefault="True" Click="OnOk" MinWidth="90"
+                Background="#4CAF50" Foreground="White" Padding="10,6"
+                Classes="green-btn"/>
+      </StackPanel>
+    </Border>
   </Grid>
 </Window>

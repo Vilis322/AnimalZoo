@@ -41,14 +41,14 @@ namespace AnimalZoo.App.Models
 
         /// <summary>
         /// Crazy action: emit echolocation and toggle flight;
-        /// returns a localized log/alert string.
+        /// returns a localizable message.
         /// </summary>
-        public string ActCrazy(List<Animal> allAnimals)
+        public NeighborReaction? ActCrazy(List<Animal> allAnimals)
         {
             // Toggle flight state via Fly() to keep notifications consistent
             Fly();
             var key = IsFlying ? "Bat.Crazy.Echo.TakeOff" : "Bat.Crazy.Echo.Land";
-            return string.Format(Loc.Instance[key], Name);
+            return new NeighborReaction(key, Name);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace AnimalZoo.App.Models
             }
         }
 
-        public override string OnNeighborJoined(Animal newcomer)
-            => string.Format(Loc.Instance["Bat.Neighbor"], Name, newcomer.Name);
+        public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+            => new NeighborReaction("Bat.Neighbor", Name, newcomer.Name);
     }
 }

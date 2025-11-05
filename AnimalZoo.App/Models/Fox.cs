@@ -16,20 +16,20 @@ public sealed class Fox : Animal, ICrazyAction
     public override string MakeSound() => "Ring-ding-ding!";
     public override string Describe() => string.Format(Loc.Instance["Fox.Describe"], Name, Age);
 
-    public string ActCrazy(List<Animal> allAnimals)
+    public NeighborReaction? ActCrazy(List<Animal> allAnimals)
     {
         if (allAnimals is null || allAnimals.Count == 0)
-            return string.Format(Loc.Instance["Fox.Crazy.NoOne"], Name);
+            return null; // No animals to steal from
 
         var candidates = allAnimals.Where(a => !ReferenceEquals(a, this) && a.Mood == AnimalMood.Hungry).ToList();
         if (candidates.Count == 0)
-            return string.Format(Loc.Instance["Fox.Crazy.NoHungry"], Name);
+            return null; // No hungry animals to target
 
         var rnd = new System.Random();
         var victim = candidates[rnd.Next(candidates.Count)];
-        return string.Format(Loc.Instance["Fox.Crazy.Steal"], Name, victim.Name);
+        return new NeighborReaction("Fox.Crazy.Steal", Name);
     }
 
-    public override string OnNeighborJoined(Animal newcomer)
-        => string.Format(Loc.Instance["Fox.Neighbor"], Name, newcomer.Name);
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+        => new NeighborReaction("Fox.Neighbor");
 }

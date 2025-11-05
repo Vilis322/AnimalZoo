@@ -10,8 +10,8 @@ public interface ICrazyAction
 {
     /// <summary>
     /// Perform a crazy action possibly involving other animals.
-    /// Returns a human-readable log line.
+    /// Returns a localizable message (key + parameters) or null if unable to perform.
     /// </summary>
     /// <param name="allAnimals">All animals currently present.</param>
-    string ActCrazy(List<Animal> allAnimals);
+    NeighborReaction? ActCrazy(List<Animal> allAnimals);
 }

@@ -37,17 +37,17 @@ namespace AnimalZoo.App.Models
         /// <summary>
         /// Crazy action: mimic the sound of a random non-parrot animal that is currently present.
         /// - Picks target from 'allAnimals' excluding self and other parrots.
-        /// - Returns a localized message with this parrot's name and the target animal's name.
+        /// - Returns a localizable message with this parrot's name and the target animal's name.
         /// - Additionally plays the target animal's 'voice.wav'.
         /// </summary>
-        public string ActCrazy(List<Animal> allAnimals)
+        public NeighborReaction? ActCrazy(List<Animal> allAnimals)
         {
             if (allAnimals is null || allAnimals.Count == 0)
-                return Loc.Instance["Parrot.Crazy.NoTargets"];
+                return new NeighborReaction("Parrot.Crazy.NoTargets");
 
             var candidates = allAnimals.Where(a => !ReferenceEquals(a, this) && a is not Parrot).ToList();
             if (candidates.Count == 0)
-                return Loc.Instance["Parrot.Crazy.NoTargets"];
+                return new NeighborReaction("Parrot.Crazy.NoTargets");
 
             var rnd = new Random();
             var target = candidates[rnd.Next(candidates.Count)];
@@ -55,8 +55,8 @@ namespace AnimalZoo.App.Models
             // Trigger audio playback of the target's "voice.wav" (fire-and-forget).
             _ = PlayMimicAsync(target);
 
-            // Return localized log/alert text "{ParrotName} mimics {TargetName}!"
-            return string.Format(Loc.Instance["Parrot.Crazy.Mimic"], Name, target.Name);
+            // Return localizable message "{ParrotName} mimics {TargetName}!"
+            return new NeighborReaction("Parrot.Crazy.Mimic", Name, target.Name);
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace AnimalZoo.App.Models
             }
         }
 
-        public override string OnNeighborJoined(Animal newcomer)
-            => string.Format(Loc.Instance["Parrot.Neighbor"], Name, newcomer.Name);
+        public override NeighborReaction? OnNeighborJoined(Animal newcomer)
+            => new NeighborReaction("Parrot.Neighbor");
     }
 }

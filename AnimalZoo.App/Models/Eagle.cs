@@ -37,15 +37,15 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     public void Fly() => ToggleFly();
 
     /// <summary>Crazy action: dramatic takeoff/landing unless sleeping.</summary>
-    public string ActCrazy(List<Animal> allAnimals)
+    public NeighborReaction? ActCrazy(List<Animal> allAnimals)
     {
         if (Mood == AnimalMood.Sleeping)
-            return string.Format(Loc.Instance["Eagle.Crazy.SleepingNoFly"], Name);
+            return null; // Cannot perform crazy action while sleeping
 
         ToggleFly();
         return IsFlying
-            ? string.Format(Loc.Instance["Eagle.Crazy.Flying"], Name)
-            : string.Format(Loc.Instance["Eagle.Crazy.Landing"], Name);
+            ? new NeighborReaction("Eagle.Crazy.Flying", Name)
+            : new NeighborReaction("Eagle.Crazy.Landing", Name);
     }
 
     /// <summary>Land automatically when going to Sleeping.</summary>
@@ -59,10 +59,10 @@ public sealed class Eagle : Animal, Flyable, ICrazyAction
     }
 
     /// <summary>Reaction to a newcomer in the same enclosure.</summary>
-    public override string OnNeighborJoined(Animal newcomer)
+    public override NeighborReaction? OnNeighborJoined(Animal newcomer)
     {
         return newcomer is Bird
-            ? string.Format(Loc.Instance["Eagle.Neighbor.Bird"], Name, newcomer.Name)
-            : string.Format(Loc.Instance["Eagle.Neighbor.Other"], Name, newcomer.Name);
+            ? new NeighborReaction("Eagle.Neighbor.Bird")
+            : new NeighborReaction("Eagle.Neighbor.Other");
     }
 }
