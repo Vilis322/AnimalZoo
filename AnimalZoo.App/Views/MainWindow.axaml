@@ -118,61 +118,14 @@
       </StackPanel>
     </Border>
 
-    <!-- RIGHT: Details + Actions + Stats -->
+    <!-- RIGHT: Details + Actions + Stats (with ScrollViewer) -->
     <Border Grid.Row="1" Grid.Column="1" Margin="8" Background="White"
             BorderBrush="#CCC" BorderThickness="1" CornerRadius="8" Padding="12">
-      <StackPanel Spacing="12">
-        <Grid ColumnDefinitions="*,Auto">
-          <TextBlock Text="{Binding TextDetailsHeader}" FontWeight="SemiBold"
-                     FontSize="16" Foreground="#2E7D32" VerticalAlignment="Center" />
-
-          <!-- Language ComboBox -->
-          <ComboBox Grid.Column="1"
-                    ItemsSource="{Binding LanguageOptions}"
-                    SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
-                    MinWidth="80"
-                    Background="#FFF"
-                    BorderBrush="#2E7D32"
-                    BorderThickness="2"
-                    ToolTip.Tip="Change language">
-            <ComboBox.ItemTemplate>
-              <DataTemplate>
-                <TextBlock Text="{Binding Display}" />
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-        </Grid>
-
-        <!-- Toggle IDs button -->
-        <Button Command="{Binding ToggleIdListCommand}"
-                Background="#9C27B0" Foreground="White"
-                Classes="dark-purple-btn"
-                HorizontalAlignment="Stretch">
-          <TextBlock Text="{Binding TextToggleIds}" TextAlignment="Center" TextWrapping="Wrap"/>
-        </Button>
-
-        <!-- IDs panel (scrollable, collapsible) -->
-        <Border IsVisible="{Binding IsIdListVisible}"
-                BorderBrush="#9C27B0" BorderThickness="2" CornerRadius="6"
-                Padding="10" Background="#F3E5F5">
-          <Grid RowDefinitions="Auto,*">
-            <TextBlock Text="{Binding TextAnimalIdsHeader}" FontWeight="SemiBold"
-                       Foreground="#9C27B0" Margin="0,0,0,8"/>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="150">
-              <ItemsControl ItemsSource="{Binding AnimalIds}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
-                      <TextBlock Text="{Binding .}" TextWrapping="Wrap" Foreground="Black"/>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </ScrollViewer>
-          </Grid>
-        </Border>
-
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
         <!-- DETAILS CARD with embedded image on the right -->
+        <TextBlock Text="{Binding TextDetailsHeader}" FontWeight="SemiBold"
+                   FontSize="16" Foreground="#2E7D32" />
         <Border Padding="12" BorderBrush="#2196F3" BorderThickness="2" CornerRadius="8"
                 Background="#E3F2FD">
           <Grid ColumnDefinitions="Auto,12,*,12,Auto" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
@@ -205,8 +158,8 @@
                     Background="#E8F5E9"
                     VerticalAlignment="Center">
               <Image Source="{Binding CurrentImage}"
-                     Height="120"
-                     Width="120"
+                     Height="140"
+                     Width="140"
                      Stretch="Uniform"
                      HorizontalAlignment="Center"/>
             </Border>
@@ -292,10 +245,10 @@
               </Button>
             </Grid>
 
-            <!-- LOG list -->
+            <!-- LOG list with fixed height -->
             <ListBox ItemsSource="{Binding LogEntries}"
                      SelectedItem="{Binding SelectedLogEntry}"
-                     MaxHeight="160"
+                     Height="180"
                      Background="White"
                      BorderBrush="#D7CCC8"
                      BorderThickness="1">
@@ -310,14 +263,69 @@
           </StackPanel>
         </Border>
 
-        <!-- STATS section -->
-        <Border BorderBrush="#009688" BorderThickness="2" CornerRadius="8"
+        <!-- Control buttons row: Show IDs, Toggle Stats, Language -->
+        <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
+          <Button Grid.Column="0" Command="{Binding ToggleIdListCommand}"
+                  Background="#9C27B0" Foreground="White"
+                  Classes="dark-purple-btn"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextToggleIds}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+
+          <Button Grid.Column="1" Command="{Binding ToggleStatsCommand}"
+                  Background="#009688" Foreground="White"
+                  Classes="cyan-btn"
+                  HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding TextToggleStats}" TextAlignment="Center" TextWrapping="Wrap"/>
+          </Button>
+
+          <!-- Language ComboBox -->
+          <ComboBox Grid.Column="2"
+                    ItemsSource="{Binding LanguageOptions}"
+                    SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                    MinWidth="80"
+                    Background="#FFF"
+                    BorderBrush="#2E7D32"
+                    BorderThickness="2"
+                    ToolTip.Tip="Change language">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Display}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </Grid>
+
+        <!-- IDs panel (scrollable, collapsible) -->
+        <Border IsVisible="{Binding IsIdListVisible}"
+                BorderBrush="#9C27B0" BorderThickness="2" CornerRadius="6"
+                Padding="10" Background="#F3E5F5">
+          <Grid RowDefinitions="Auto,*">
+            <TextBlock Text="{Binding TextAnimalIdsHeader}" FontWeight="SemiBold"
+                       Foreground="#9C27B0" Margin="0,0,0,8"/>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+              <ItemsControl ItemsSource="{Binding AnimalIds}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="4,6">
+                      <TextBlock Text="{Binding .}" TextWrapping="Wrap" Foreground="Black"/>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
+        </Border>
+
+        <!-- STATS section (collapsible) -->
+        <Border IsVisible="{Binding IsStatsVisible}"
+                BorderBrush="#009688" BorderThickness="2" CornerRadius="8"
                 Padding="10" Background="#E0F2F1">
           <StackPanel Spacing="8">
             <TextBlock Text="{Binding TextStatsHeader}" FontWeight="SemiBold"
                        FontSize="14" Foreground="#00695C"/>
 
-            <!-- Scrollable stats block with increased height -->
+            <!-- Scrollable stats block -->
             <Border Background="White" BorderBrush="#B2DFDB" BorderThickness="1"
                     CornerRadius="4" Padding="8" Height="280">
               <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -373,7 +381,8 @@
             </Border>
           </StackPanel>
         </Border>
-      </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
     </Border>
 
     <!-- FOOTER -->
