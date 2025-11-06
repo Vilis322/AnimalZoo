@@ -69,6 +69,7 @@
   "Alerts.FeedingStarted": "Söötmine alustatud. Jälgi järjekorda logis.",
   "Alerts.FeedingFinished": "Söötmine lõpetatud.",
   "Alerts.FeedingFailed": "Söötmine ebaõnnestus. Vaata logi.",
+  "Alerts.NoAnimalsToRefresh": "Loomi pole, kellelegi statistikat uuendada.",
 
   "Stats.NoHungry": "Praegu pole näljaseid loomi.",
 

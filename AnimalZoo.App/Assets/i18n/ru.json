@@ -70,6 +70,7 @@
   "Alerts.FeedingStarted": "Кормление начато. Следите за порядком в логе.",
   "Alerts.FeedingFinished": "Кормление завершено.",
   "Alerts.FeedingFailed": "Кормление не удалось. См. лог.",
+  "Alerts.NoAnimalsToRefresh": "Нет животных, некого обновлять статистику.",
 
   "Stats.NoHungry": "Сейчас нет голодных животных.",
 

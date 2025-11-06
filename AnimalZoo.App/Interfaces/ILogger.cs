@@ -6,7 +6,7 @@ namespace AnimalZoo.App.Interfaces;
 /// Interface for pluggable logging functionality.
 /// Supports different output formats (XML, JSON, etc.).
 /// </summary>
-public interface ILogger
+public interface ILogger : IDisposable
 {
     /// <summary>Log an informational message.</summary>
     void LogInfo(string message);

@@ -25,6 +25,7 @@ artifacts/
 # Logs & coverage
 *.log
 logs/
+Logs/
 coverage/
 TestResults/
 *.trx
