@@ -45,10 +45,16 @@ Each animal is an object with its own properties, behavior, and dynamic state tr
     - Automatic fallback to in-memory storage if database is unavailable.
     - Docker management via **Makefile** commands or manual Docker/dotnet commands.
 - **Pluggable logging**
-    - Support for both **JSON** and **XML** log formats.
+    - Support for both **JSON** and **XML** log formats (can write both simultaneously).
+    - **Rolling log files**: automatic rotation when file exceeds 5MB.
+    - **Backup retention**: keeps up to 5 backup files (`.1`, `.2`, `.3`, `.4`, `.5`).
+    - **Append mode**: new entries append to existing logs instead of overwriting.
+    - **Comprehensive logging**: all pop-up alerts, user actions, and exceptions logged.
+    - **Log levels**: Info (normal operations), Warning (user errors), Error (exceptions).
     - Thread-safe logging with automatic file persistence.
     - Logs are automatically flushed on application exit.
-    - **Default location**: `bin/Debug/net9.0/logs/animalzoo.log` (or `animalzoo.json`)
+    - **Default location**: `AnimalZoo/Logs/` at project root.
+    - Log files use English messages for clarity (UI still shows localized messages).
     - Console output shows resolved log file path on startup.
     - Configure via `appsettings.json` (see Configuration section below).
 - **Sound system**
@@ -169,6 +175,24 @@ The application uses pluggable logging that can be configured via `appsettings.j
 - All log entries are written in UTC time for consistency
 - Log directory is automatically detected by searching for .sln file
 
+**Rolling log files**:
+- **Maximum file size**: 5 MB per log file
+- **Backup files**: Up to 5 backups retained (`.1`, `.2`, `.3`, `.4`, `.5`)
+- **Oldest deleted**: When rolling, the oldest backup (`.5`) is automatically deleted
+- **Append mode**: New entries append to existing files instead of overwriting
+- **Example**: When `animalzoo.json` reaches 5MB:
+  - Current file → `animalzoo.json.1`
+  - Previous `.1` → `.2`, `.2` → `.3`, `.3` → `.4`, `.4` → `.5`
+  - Oldest `.5` is deleted
+  - New empty `animalzoo.json` is created
+
+**What gets logged**:
+- **Info level**: Normal operations (drop food, refresh stats, animal additions/removals)
+- **Warning level**: User action errors (feed non-hungry animal, fly while sleeping, empty name validation)
+- **Error level**: Exceptions (sound playback failures, database errors, operation failures)
+- All pop-up alert messages are logged with descriptive English text
+- Log files use English for clarity; UI still displays localized messages to users
+
 **Log location**:
 - Logs are always stored at the project root: `AnimalZoo/Logs/`
 - This works regardless of where the application is run from
@@ -178,7 +202,8 @@ The application uses pluggable logging that can be configured via `appsettings.j
 - If log files don't appear, check the console output for the resolved path
 - Ensure the application has write permissions to the log directory
 - Logs are automatically flushed when the application exits
-- To force immediate logging, trigger the application exit event
+- Check backup files (`.1`, `.2`, etc.) if main log was rotated
+- All exceptions include full stack traces in Error level logs
 
  ---
 
