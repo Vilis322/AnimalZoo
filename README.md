@@ -135,24 +135,44 @@ For detailed setup instructions, Docker management, and database operations, see
 
 The application uses pluggable logging that can be configured via `appsettings.json`:
 
+**Single format (JSON or XML)**:
 ```json
 {
   "Logging": {
-    "LoggerType": "Json",              // Options: "Json" or "Xml"
-    "LogFilePath": "logs/animalzoo.log" // Relative or absolute path
+    "LoggerType": "Json",                    // Options: "Json", "Xml", or "Both"
+    "JsonLogFilePath": "logs/animalzoo.json",
+    "XmlLogFilePath": "logs/animalzoo.xml"
   }
 }
 ```
 
+**Both formats simultaneously** (current default):
+```json
+{
+  "Logging": {
+    "LoggerType": "Both",                    // Writes to both JSON and XML
+    "JsonLogFilePath": "logs/animalzoo.json",
+    "XmlLogFilePath": "logs/animalzoo.xml"
+  }
+}
+```
+
+**Logger type options**:
+- `"Json"` - Only JSON format (uses JsonLogFilePath)
+- `"Xml"` - Only XML format (uses XmlLogFilePath)
+- `"Both"` - Both formats simultaneously (uses both file paths)
+
 **Default behavior**:
-- Log files are created in `bin/Debug/net9.0/logs/` directory
-- File extension automatically matches logger type: `.log` for XML, `.json` for JSON
-- The logs directory is created automatically if it doesn't exist
-- On startup, the console displays the resolved log file path
+- Log files are created in `AnimalZoo/Logs/` directory (project root)
+- The Logs directory is created automatically if it doesn't exist
+- On startup, the console displays the resolved log file path(s)
+- All log entries are written in UTC time for consistency
+- Log directory is automatically detected by searching for .sln file
 
 **Log location**:
-- When running via `dotnet run` or `make run`: `AnimalZoo.App/bin/Debug/net9.0/logs/`
-- When running the built executable: `logs/` directory next to the executable
+- Logs are always stored at the project root: `AnimalZoo/Logs/`
+- This works regardless of where the application is run from
+- The `Logs/` directory is git-ignored to avoid committing log files
 
 **Troubleshooting**:
 - If log files don't appear, check the console output for the resolved path

@@ -33,33 +33,59 @@ public static class ServiceConfiguration
 
         // Register logger based on configuration
         var loggerType = configuration["Logging:LoggerType"] ?? "Json";
-        var logFilePath = configuration["Logging:LogFilePath"] ?? "logs/animalzoo.log";
+        var jsonLogPath = configuration["Logging:JsonLogFilePath"] ?? "Logs/animalzoo.json";
+        var xmlLogPath = configuration["Logging:XmlLogFilePath"] ?? "Logs/animalzoo.xml";
 
-        // Make log path absolute if it's relative
-        if (!Path.IsPathRooted(logFilePath))
+        // Find project root and resolve paths relative to it
+        var projectRoot = FindProjectRoot();
+        if (!Path.IsPathRooted(jsonLogPath))
         {
-            logFilePath = Path.Combine(AppContext.BaseDirectory, logFilePath);
+            jsonLogPath = Path.Combine(projectRoot, jsonLogPath);
+        }
+        if (!Path.IsPathRooted(xmlLogPath))
+        {
+            xmlLogPath = Path.Combine(projectRoot, xmlLogPath);
         }
 
-        // Ensure log directory exists
-        var logDirectory = Path.GetDirectoryName(logFilePath);
-        if (!string.IsNullOrEmpty(logDirectory) && !Directory.Exists(logDirectory))
+        // Ensure log directories exist
+        var jsonLogDirectory = Path.GetDirectoryName(jsonLogPath);
+        if (!string.IsNullOrEmpty(jsonLogDirectory) && !Directory.Exists(jsonLogDirectory))
         {
-            Directory.CreateDirectory(logDirectory);
+            Directory.CreateDirectory(jsonLogDirectory);
+        }
+        var xmlLogDirectory = Path.GetDirectoryName(xmlLogPath);
+        if (!string.IsNullOrEmpty(xmlLogDirectory) && !Directory.Exists(xmlLogDirectory))
+        {
+            Directory.CreateDirectory(xmlLogDirectory);
         }
 
-        // Output diagnostic information
-        Console.WriteLine($"[Logging] Type: {loggerType}");
-        Console.WriteLine($"[Logging] Path: {logFilePath}");
-
-        if (loggerType.Equals("Xml", StringComparison.OrdinalIgnoreCase))
+        // Create logger based on configuration
+        ILogger logger;
+        if (loggerType.Equals("Both", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddSingleton<ILogger>(new XmlLogger(logFilePath));
+            // Use composite logger for both formats
+            Console.WriteLine("[Logging] Type: Both (JSON + XML)");
+            Console.WriteLine($"[Logging] JSON Path: {jsonLogPath}");
+            Console.WriteLine($"[Logging] XML Path: {xmlLogPath}");
+            logger = new CompositeLogger(
+                new JsonLogger(jsonLogPath),
+                new XmlLogger(xmlLogPath)
+            );
+        }
+        else if (loggerType.Equals("Xml", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("[Logging] Type: Xml");
+            Console.WriteLine($"[Logging] Path: {xmlLogPath}");
+            logger = new XmlLogger(xmlLogPath);
         }
         else
         {
-            services.AddSingleton<ILogger>(new JsonLogger(logFilePath));
+            Console.WriteLine("[Logging] Type: Json");
+            Console.WriteLine($"[Logging] Path: {jsonLogPath}");
+            logger = new JsonLogger(jsonLogPath);
         }
+
+        services.AddSingleton<ILogger>(logger);
 
         // Register repositories
         var connectionString = configuration.GetConnectionString("AnimalZooDb")
@@ -72,5 +98,27 @@ public static class ServiceConfiguration
         services.AddTransient<MainWindowViewModel>();
 
         return services.BuildServiceProvider();
+    }
+
+    /// <summary>
+    /// Finds the project root directory by searching for the .sln file.
+    /// </summary>
+    /// <returns>The absolute path to the project root directory.</returns>
+    private static string FindProjectRoot()
+    {
+        var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        // Search up the directory tree for the solution file
+        while (currentDirectory != null)
+        {
+            if (currentDirectory.GetFiles("*.sln").Length > 0)
+            {
+                return currentDirectory.FullName;
+            }
+            currentDirectory = currentDirectory.Parent;
+        }
+
+        // Fallback to base directory if .sln not found
+        return AppContext.BaseDirectory;
     }
 }
