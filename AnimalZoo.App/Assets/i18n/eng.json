@@ -70,6 +70,7 @@
   "Alerts.FeedingStarted": "Feeding started. Watch the log for the order and progress.",
   "Alerts.FeedingFinished": "Feeding finished.",
   "Alerts.FeedingFailed": "Feeding failed. See log for details.",
+  "Alerts.NoAnimalsToRefresh": "There are no animals, there is no one to update the stats for.",
 
   "Stats.NoHungry": "No animals are hungry right now.",
 

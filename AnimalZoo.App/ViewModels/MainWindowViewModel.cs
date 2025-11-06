@@ -386,7 +386,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         if (string.IsNullOrWhiteSpace(animal.Name) || animal.Name == "Unnamed")
         {
-            AlertRequested?.Invoke(_loc["Alerts.NameMissing"]);
+            var alertMsg = _loc["Alerts.NameMissing"];
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogWarning("User attempted to add animal with empty name");
             return;
         }
 
@@ -440,7 +442,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            AlertRequested?.Invoke(string.Format(_loc["Alerts.SoundError"], ex.Message));
+            var alertMsg = string.Format(_loc["Alerts.SoundError"], ex.Message);
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogError($"Sound playback failed for {typeName}: {ex.Message}", ex);
         }
     }
 
@@ -450,7 +454,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (SelectedAnimal.Mood != AnimalMood.Hungry)
         {
-            AlertRequested?.Invoke(_loc["Alerts.AlreadyFed"]);
+            var alertMsg = _loc["Alerts.AlreadyFed"];
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogWarning($"User attempted to feed {SelectedAnimal.Name} which is already in {SelectedAnimal.Mood} state");
             return;
         }
 
@@ -469,7 +475,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
-            AlertRequested?.Invoke(string.Format(_loc["Alerts.SleepingNoCrazy"], SelectedAnimal.Name));
+            var alertMsg = string.Format(_loc["Alerts.SleepingNoCrazy"], SelectedAnimal.Name);
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogWarning($"User attempted to perform crazy action with {SelectedAnimal.Name} during state {SelectedAnimal.Mood}");
             return;
         }
 
@@ -484,12 +492,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 // Show alert with current translation
                 var alertText = string.Format(_loc[reaction.LocalizationKey], reaction.Parameters);
                 AlertRequested?.Invoke(alertText);
+                _logger?.LogWarning($"{SelectedAnimal.Name} ({SelectedAnimal.GetType().Name}) performed crazy action: {reaction.LocalizationKey}");
             }
             else
             {
                 // Crazy action couldn't be performed (e.g., sleeping, no targets)
                 var msg = string.Format(_loc["Alerts.NothingCrazy"], SelectedAnimal.Name);
                 AlertRequested?.Invoke(msg);
+                _logger?.LogWarning($"{SelectedAnimal.Name} ({SelectedAnimal.GetType().Name}) could not perform crazy action - no valid targets or conditions not met");
             }
         }
         else
@@ -497,6 +507,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             var msg = string.Format(_loc["Alerts.NothingCrazy"], SelectedAnimal.Name);
             LogEntries.Insert(0, new LocalizableLogEntry(msg));
             AlertRequested?.Invoke(msg);
+            _logger?.LogWarning($"{SelectedAnimal.Name} ({SelectedAnimal.GetType().Name}) has no crazy action implementation");
         }
 
         UpdateStats();
@@ -515,7 +526,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         // Do not allow toggling while sleeping (UX rule).
         if (SelectedAnimal is Flyable && SelectedAnimal.Mood == AnimalMood.Sleeping)
         {
-            AlertRequested?.Invoke(string.Format(_loc["Alerts.SleepingNoFly"], SelectedAnimal.Name));
+            var alertMsg = string.Format(_loc["Alerts.SleepingNoFly"], SelectedAnimal.Name);
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogWarning($"User attempted to toggle flight with {SelectedAnimal.Name} during state {SelectedAnimal.Mood}");
             return;
         }
 
@@ -592,14 +605,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         // Check if any animals are hungry before starting the feeding process
         if (!Animals.Any(a => a.Mood == AnimalMood.Hungry))
         {
-            AlertRequested?.Invoke(_loc["Alerts.NoHungryAnimals"]);
+            var alertMsg = _loc["Alerts.NoHungryAnimals"];
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogWarning("User attempted to drop food when no animals are hungry");
             return;
         }
 
         _isFeeding = true;
         (DropFoodCommand as RelayCommand)?.RaiseCanExecuteChanged();
 
-        AlertRequested?.Invoke(_loc["Alerts.FeedingStarted"]);
+        var feedingStartedMsg = _loc["Alerts.FeedingStarted"];
+        AlertRequested?.Invoke(feedingStartedMsg);
+        _logger?.LogInfo($"Drop food initiated for {Animals.Count(a => a.Mood == AnimalMood.Hungry)} hungry animals");
         try
         {
             await _enclosure.DropFoodAsync(
@@ -617,11 +634,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                     }
                 }
             );
-            AlertRequested?.Invoke(_loc["Alerts.FeedingFinished"]);
+            var feedingFinishedMsg = _loc["Alerts.FeedingFinished"];
+            AlertRequested?.Invoke(feedingFinishedMsg);
+            _logger?.LogInfo("Drop food completed successfully");
         }
-        catch
+        catch (Exception ex)
         {
-            AlertRequested?.Invoke(_loc["Alerts.FeedingFailed"]);
+            var feedingFailedMsg = _loc["Alerts.FeedingFailed"];
+            AlertRequested?.Invoke(feedingFailedMsg);
+            _logger?.LogError($"Drop food operation failed: {ex.Message}", ex);
         }
         finally
         {
@@ -894,8 +915,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     /// </summary>
     private void ResetAllToHungryAndRefresh()
     {
+        // Check if there are no animals
+        if (Animals.Count == 0)
+        {
+            var alertMsg = _loc["Alerts.NoAnimalsToRefresh"];
+            AlertRequested?.Invoke(alertMsg);
+            _logger?.LogWarning("User attempted to refresh stats when no animals exist");
+            return;
+        }
+
         // First, add the summary log entry (will be at the top)
         LogEntries.Insert(0, new LocalizableLogEntry("Log.ResetAllHungry"));
+        _logger?.LogInfo($"Refresh stats initiated - resetting {Animals.Count} animals to Hungry state");
 
         foreach (var a in Animals.ToList())
         {
@@ -966,7 +997,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             // If database loading fails, log the error but don't crash the app
             LogEntries.Insert(0, new LocalizableLogEntry($"Failed to load animals from database: {ex.Message}"));
-            _logger?.LogError($"Failed to load animals from database", ex);
+            _logger?.LogError($"Database loading failed - Exception: {ex.GetType().Name}, Message: {ex.Message}", ex);
         }
         finally
         {
