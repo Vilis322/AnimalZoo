@@ -48,6 +48,10 @@ public static class ServiceConfiguration
             Directory.CreateDirectory(logDirectory);
         }
 
+        // Output diagnostic information
+        Console.WriteLine($"[Logging] Type: {loggerType}");
+        Console.WriteLine($"[Logging] Path: {logFilePath}");
+
         if (loggerType.Equals("Xml", StringComparison.OrdinalIgnoreCase))
         {
             services.AddSingleton<ILogger>(new XmlLogger(logFilePath));

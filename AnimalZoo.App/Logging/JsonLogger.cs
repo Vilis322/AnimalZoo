@@ -13,6 +13,8 @@ public sealed class JsonLogger : ILogger
 {
     private readonly List<LogEntry> _entries = new();
     private readonly string _logFilePath;
+    private readonly object _lock = new();
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the JsonLogger.
@@ -21,57 +23,86 @@ public sealed class JsonLogger : ILogger
     public JsonLogger(string logFilePath)
     {
         _logFilePath = logFilePath ?? throw new ArgumentNullException(nameof(logFilePath));
+
+        // Ensure directory exists
+        var directory = Path.GetDirectoryName(_logFilePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
     }
 
     /// <inheritdoc />
     public void LogInfo(string message)
     {
-        _entries.Add(new LogEntry
+        lock (_lock)
         {
-            Level = "Info",
-            Message = message,
-            Timestamp = DateTime.UtcNow
-        });
+            _entries.Add(new LogEntry
+            {
+                Level = "Info",
+                Message = message,
+                Timestamp = DateTime.UtcNow
+            });
+        }
     }
 
     /// <inheritdoc />
     public void LogWarning(string message)
     {
-        _entries.Add(new LogEntry
+        lock (_lock)
         {
-            Level = "Warning",
-            Message = message,
-            Timestamp = DateTime.UtcNow
-        });
+            _entries.Add(new LogEntry
+            {
+                Level = "Warning",
+                Message = message,
+                Timestamp = DateTime.UtcNow
+            });
+        }
     }
 
     /// <inheritdoc />
     public void LogError(string message, Exception? exception = null)
     {
-        _entries.Add(new LogEntry
+        lock (_lock)
         {
-            Level = "Error",
-            Message = message,
-            Exception = exception?.ToString(),
-            Timestamp = DateTime.UtcNow
-        });
+            _entries.Add(new LogEntry
+            {
+                Level = "Error",
+                Message = message,
+                Exception = exception?.ToString(),
+                Timestamp = DateTime.UtcNow
+            });
+        }
     }
 
     /// <inheritdoc />
     public void Flush()
     {
-        if (_entries.Count == 0)
+        lock (_lock)
+        {
+            if (_entries.Count == 0)
+                return;
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+
+            var json = JsonSerializer.Serialize(_entries, options);
+            File.WriteAllText(_logFilePath, json);
+
+            _entries.Clear();
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (_disposed)
             return;
 
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
-
-        var json = JsonSerializer.Serialize(_entries, options);
-        File.WriteAllText(_logFilePath, json);
-
-        _entries.Clear();
+        Flush();
+        _disposed = true;
     }
 
     private sealed class LogEntry

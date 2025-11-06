@@ -42,9 +42,15 @@ Each animal is an object with its own properties, behavior, and dynamic state tr
     - **SQL Server 2022** database running in Docker for data persistence.
     - **ADO.NET-based repositories** with CRUD operations for animals and enclosures.
     - All animal data persists between application restarts.
-    - **Pluggable logging** with JSON or XML format support.
     - Automatic fallback to in-memory storage if database is unavailable.
     - Docker management via **Makefile** commands or manual Docker/dotnet commands.
+- **Pluggable logging**
+    - Support for both **JSON** and **XML** log formats.
+    - Thread-safe logging with automatic file persistence.
+    - Logs are automatically flushed on application exit.
+    - **Default location**: `bin/Debug/net9.0/logs/animalzoo.log` (or `animalzoo.json`)
+    - Console output shows resolved log file path on startup.
+    - Configure via `appsettings.json` (see Configuration section below).
 - **Sound system**
     - Each animal has its own **voice.wav** stored under `Assets/<Animal>/`.
     - Pressing **Make Sound** plays the correct sound file for the selected animal.
@@ -119,7 +125,40 @@ For detailed setup instructions, Docker management, and database operations, see
 - **[QUICK_START.md](./QUICK_START.md)** - Complete setup guide with and without Make
 - **[MAKE.md](./MAKE.md)** - All available Make commands
 - **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Database initialization and schema details
-- - **[IMPLEMENTATION_DB_SUMMARY.md](./IMPLEMENTATION_DB_SUMMARY.md)** - Architecture details
+- **[IMPLEMENTATION_DB_SUMMARY.md](./IMPLEMENTATION_DB_SUMMARY.md)** - Architecture details
+
+---
+
+## **Configuration**
+
+### Logging
+
+The application uses pluggable logging that can be configured via `appsettings.json`:
+
+```json
+{
+  "Logging": {
+    "LoggerType": "Json",              // Options: "Json" or "Xml"
+    "LogFilePath": "logs/animalzoo.log" // Relative or absolute path
+  }
+}
+```
+
+**Default behavior**:
+- Log files are created in `bin/Debug/net9.0/logs/` directory
+- File extension automatically matches logger type: `.log` for XML, `.json` for JSON
+- The logs directory is created automatically if it doesn't exist
+- On startup, the console displays the resolved log file path
+
+**Log location**:
+- When running via `dotnet run` or `make run`: `AnimalZoo.App/bin/Debug/net9.0/logs/`
+- When running the built executable: `logs/` directory next to the executable
+
+**Troubleshooting**:
+- If log files don't appear, check the console output for the resolved path
+- Ensure the application has write permissions to the log directory
+- Logs are automatically flushed when the application exits
+- To force immediate logging, trigger the application exit event
 
  ---
 
