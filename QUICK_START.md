@@ -418,31 +418,47 @@ Edit `AnimalZoo.App/appsettings.json`:
 
 ### Switch to EF Core
 
-To use Entity Framework Core instead of ADO.NET:
+#### Option A: New Empty Database
 
-1. **Update configuration** in `appsettings.json`:
-   ```json
-   {
-     "DataAccess": {
-       "RepositoryType": "EfCore"
-     }
-   }
+To use Entity Framework Core with a new empty database:
+
+1. **Switch to EF Core**:
+   ```bash
+   make use-efcore
    ```
 
 2. **Apply migrations** (first time only):
    ```bash
-   # Install EF Core tools (if not already installed)
-   dotnet tool install --global dotnet-ef
-
-   # Apply migrations to create/update database schema
-   cd AnimalZoo.App
-   dotnet ef database update
+   make ef-init
    ```
 
 3. **Run the application**:
    ```bash
-   dotnet run --project AnimalZoo.App/AnimalZoo.App.csproj
+   make run
    ```
+
+#### Option B: Existing ADO.NET Database (Recommended when switching)
+
+If you already initialized the database with `make docker-init` (ADO.NET script):
+
+1. **Switch to EF Core**:
+   ```bash
+   make use-efcore
+   ```
+
+2. **Mark existing database as migrated**:
+   ```bash
+   make ef-init-existing
+   ```
+
+   This tells EF Core that the database schema is already up to date and prevents the "object already exists" error.
+
+3. **Run the application**:
+   ```bash
+   make run
+   ```
+
+**Note:** Using `make ef-init-existing` preserves all your existing data and allows EF Core to work with the ADO.NET-created database.
 
 ### EF Core Migration Commands
 

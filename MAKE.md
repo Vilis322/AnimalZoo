@@ -310,7 +310,7 @@ make use-efcore
 ## Entity Framework Core Commands
 
 ### `make ef-init`
-Applies EF Core migrations to create or update the database schema (first time setup).
+Applies EF Core migrations to create or update the database schema (first time setup for empty database).
 
 ```bash
 make ef-init
@@ -321,14 +321,51 @@ make ef-init
 - Checks if SQL Server container is running
 - Applies all pending migrations to the database
 - Creates/updates tables, indexes, and foreign keys
+- Detects if database was created with ADO.NET and suggests solution
 
 **Requirements:**
 - SQL Server container must be running (`make docker-up`)
 - Application must be configured for EF Core (`make use-efcore`)
+- Database should be empty (not initialized with `docker-init`)
 
 **Output:** Creates the same database schema as `docker-init`.
 
-**Run this:** After switching to EF Core for the first time.
+**Run this:** After switching to EF Core for the first time with an empty database.
+
+**Note:** If you get an error about existing tables, use `make ef-init-existing` instead.
+
+---
+
+### `make ef-init-existing`
+Marks an existing ADO.NET database as migrated (for switching from ADO.NET to EF Core).
+
+```bash
+make ef-init-existing
+```
+
+**What it does:**
+- Creates `__EFMigrationsHistory` table if it doesn't exist
+- Inserts a record marking InitialCreate migration as applied
+- Tells EF Core that the database schema is already up to date
+- Allows EF Core to work with databases created by `docker-init`
+
+**Requirements:**
+- SQL Server container must be running
+- Database was created with `make docker-init` (ADO.NET script)
+- Application is configured for EF Core (`make use-efcore`)
+
+**Use case:**
+- Switching from ADO.NET to EF Core with existing database
+- Database already has Animals and Enclosures tables
+- Want to use EF Core without recreating the database
+
+**Example workflow:**
+```bash
+# You have an existing ADO.NET database
+make use-efcore              # Switch to EF Core
+make ef-init-existing        # Mark existing database as migrated
+make run                     # Run with EF Core
+```
 
 ---
 
@@ -497,7 +534,7 @@ make docker-init    # Create database schema with SQL script
 make run            # Run the application
 ```
 
-### First-Time Setup (Entity Framework Core)
+### First-Time Setup (Entity Framework Core - Empty Database)
 ```bash
 make docker-up      # Start SQL Server
 make use-efcore     # Switch to EF Core
@@ -505,17 +542,38 @@ make ef-init        # Apply EF Core migrations
 make run            # Run the application
 ```
 
-### Switching Between ADO.NET and EF Core
+### Migrating from ADO.NET to EF Core (Existing Database)
 ```bash
-# Switch to EF Core
-make use-efcore
-make ef-init        # Only needed first time
+# You already have data from ADO.NET
+make use-efcore           # Switch to EF Core
+make ef-init-existing     # Mark database as migrated
+make run                  # Run with EF Core (keeps all data)
+```
 
-# Switch back to ADO.NET
-make use-adonet
-# No initialization needed if database already exists
+### Switching Between ADO.NET and EF Core
 
-# Check current configuration
+**From ADO.NET to EF Core (with existing database):**
+```bash
+make use-efcore              # Switch configuration
+make ef-init-existing        # Mark existing database as migrated
+make run                     # Run with EF Core
+```
+
+**From ADO.NET to EF Core (with empty database):**
+```bash
+make use-efcore              # Switch configuration
+make ef-init                 # Apply migrations
+make run                     # Run with EF Core
+```
+
+**From EF Core back to ADO.NET:**
+```bash
+make use-adonet              # Switch configuration
+make run                     # Run with ADO.NET (no database changes needed)
+```
+
+**Check current configuration:**
+```bash
 make show-data-access
 ```
 
