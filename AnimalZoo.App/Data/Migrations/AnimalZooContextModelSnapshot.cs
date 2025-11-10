@@ -86,24 +86,12 @@ namespace AnimalZoo.App.Data.Migrations
                 {
                     b.HasBaseType("AnimalZoo.App.Models.Animal");
 
-                    b.Property<bool>("IsFlying")
-                        .HasColumnType("bit");
-
                     b.HasDiscriminator().HasValue("Bat");
                 });
 
             modelBuilder.Entity("AnimalZoo.App.Models.Bird", b =>
                 {
                     b.HasBaseType("AnimalZoo.App.Models.Animal");
-
-                    b.Property<bool>("IsFlying")
-                        .HasColumnType("bit");
-
-                    b.ToTable("Animals", t =>
-                        {
-                            t.Property("IsFlying")
-                                .HasColumnName("Bird_IsFlying");
-                        });
 
                     b.HasDiscriminator().HasValue("Bird");
                 });
@@ -125,15 +113,6 @@ namespace AnimalZoo.App.Data.Migrations
             modelBuilder.Entity("AnimalZoo.App.Models.Eagle", b =>
                 {
                     b.HasBaseType("AnimalZoo.App.Models.Animal");
-
-                    b.Property<bool>("IsFlying")
-                        .HasColumnType("bit");
-
-                    b.ToTable("Animals", t =>
-                        {
-                            t.Property("IsFlying")
-                                .HasColumnName("Eagle_IsFlying");
-                        });
 
                     b.HasDiscriminator().HasValue("Eagle");
                 });
@@ -162,15 +141,6 @@ namespace AnimalZoo.App.Data.Migrations
             modelBuilder.Entity("AnimalZoo.App.Models.Parrot", b =>
                 {
                     b.HasBaseType("AnimalZoo.App.Models.Animal");
-
-                    b.Property<bool>("IsFlying")
-                        .HasColumnType("bit");
-
-                    b.ToTable("Animals", t =>
-                        {
-                            t.Property("IsFlying")
-                                .HasColumnName("Parrot_IsFlying");
-                        });
 
                     b.HasDiscriminator().HasValue("Parrot");
                 });

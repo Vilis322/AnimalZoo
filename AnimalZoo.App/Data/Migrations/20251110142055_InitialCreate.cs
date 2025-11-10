@@ -19,11 +19,7 @@ namespace AnimalZoo.App.Data.Migrations
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Age = table.Column<double>(type: "float", nullable: false),
                     Mood = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    AnimalType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
-                    IsFlying = table.Column<bool>(type: "bit", nullable: true),
-                    Bird_IsFlying = table.Column<bool>(type: "bit", nullable: true),
-                    Eagle_IsFlying = table.Column<bool>(type: "bit", nullable: true),
-                    Parrot_IsFlying = table.Column<bool>(type: "bit", nullable: true)
+                    AnimalType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false)
                 },
                 constraints: table =>
                 {

@@ -326,10 +326,10 @@ ef-init-existing:
 		            ProductVersion nvarchar(32) NOT NULL \
 		        ); \
 		    END; \
-		    IF NOT EXISTS (SELECT * FROM __EFMigrationsHistory WHERE MigrationId = '20251110134623_InitialCreate') \
+		    IF NOT EXISTS (SELECT * FROM __EFMigrationsHistory WHERE MigrationId = '20251110142055_InitialCreate') \
 		    BEGIN \
 		        INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) \
-		        VALUES ('20251110134623_InitialCreate', '9.0.0'); \
+		        VALUES ('20251110142055_InitialCreate', '9.0.0'); \
 		        PRINT 'Marked InitialCreate as applied'; \
 		    END \
 		    ELSE \

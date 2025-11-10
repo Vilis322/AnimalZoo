@@ -91,6 +91,12 @@ public class AnimalZooContext : DbContext
             entity.Ignore(a => a.DisplayState);
             entity.Ignore(a => a.Identifier);
         });
+
+        // Configure derived types to ignore runtime properties
+        modelBuilder.Entity<Bird>().Ignore(b => b.IsFlying);
+        modelBuilder.Entity<Eagle>().Ignore(e => e.IsFlying);
+        modelBuilder.Entity<Bat>().Ignore(b => b.IsFlying);
+        modelBuilder.Entity<Parrot>().Ignore(p => p.IsFlying);
     }
 
     /// <summary>
