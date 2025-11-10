@@ -392,18 +392,104 @@ Edit `AnimalZoo.App/appsettings.json`:
   "ConnectionStrings": {
     "AnimalZooDb": "Server=localhost,1433;Database=AnimalZooDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=True;"
   },
+  "DataAccess": {
+    "RepositoryType": "AdoNet"
+  },
   "Logging": {
-    "LoggerType": "Json",
-    "LogFilePath": "logs/animalzoo.log"
+    "LoggerType": "Both",
+    "JsonLogFilePath": "Logs/animalzoo.json",
+    "XmlLogFilePath": "Logs/animalzoo.xml"
   }
 }
 ```
 
+**Data Access Options**:
+- `"AdoNet"` - ADO.NET with direct SQL queries (default)
+- `"EfCore"` - Entity Framework Core with LINQ and migrations
+
 **Logger Options**:
-- `"Json"` - JSON format (default)
-- `"Xml"` - XML format
+- `"Json"` - JSON format only
+- `"Xml"` - XML format only
+- `"Both"` - Write to both JSON and XML simultaneously
 
 ---
+
+## Using Entity Framework Core (Optional)
+
+### Switch to EF Core
+
+#### Option A: New Empty Database
+
+To use Entity Framework Core with a new empty database:
+
+1. **Switch to EF Core**:
+   ```bash
+   make use-efcore
+   ```
+
+2. **Apply migrations** (first time only):
+   ```bash
+   make ef-init
+   ```
+
+3. **Run the application**:
+   ```bash
+   make run
+   ```
+
+#### Option B: Existing ADO.NET Database (Recommended when switching)
+
+If you already initialized the database with `make docker-init` (ADO.NET script):
+
+1. **Switch to EF Core**:
+   ```bash
+   make use-efcore
+   ```
+
+2. **Mark existing database as migrated**:
+   ```bash
+   make ef-init-existing
+   ```
+
+   This tells EF Core that the database schema is already up to date and prevents the "object already exists" error.
+
+3. **Run the application**:
+   ```bash
+   make run
+   ```
+
+**Note:** Using `make ef-init-existing` preserves all your existing data and allows EF Core to work with the ADO.NET-created database.
+
+### EF Core Migration Commands
+
+```bash
+# View migration history
+dotnet ef migrations list
+
+# Create new migration
+dotnet ef migrations add MigrationName --output-dir Data/Migrations
+
+# Apply migrations to database
+dotnet ef database update
+
+# Revert to specific migration
+dotnet ef database update PreviousMigrationName
+
+# Remove last migration (if not applied)
+dotnet ef migrations remove
+
+# Generate SQL script from migrations
+dotnet ef migrations script
+```
+
+### Switching Between ADO.NET and EF Core
+
+Both implementations:
+- Use the **same database schema**
+- Support **all CRUD operations**
+- Can be **switched at runtime** via configuration
+
+No data migration needed - just change `RepositoryType` in `appsettings.json`.
 
 ## Troubleshooting
 
