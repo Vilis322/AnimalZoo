@@ -392,18 +392,88 @@ Edit `AnimalZoo.App/appsettings.json`:
   "ConnectionStrings": {
     "AnimalZooDb": "Server=localhost,1433;Database=AnimalZooDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Encrypt=True;"
   },
+  "DataAccess": {
+    "RepositoryType": "AdoNet"
+  },
   "Logging": {
-    "LoggerType": "Json",
-    "LogFilePath": "logs/animalzoo.log"
+    "LoggerType": "Both",
+    "JsonLogFilePath": "Logs/animalzoo.json",
+    "XmlLogFilePath": "Logs/animalzoo.xml"
   }
 }
 ```
 
+**Data Access Options**:
+- `"AdoNet"` - ADO.NET with direct SQL queries (default)
+- `"EfCore"` - Entity Framework Core with LINQ and migrations
+
 **Logger Options**:
-- `"Json"` - JSON format (default)
-- `"Xml"` - XML format
+- `"Json"` - JSON format only
+- `"Xml"` - XML format only
+- `"Both"` - Write to both JSON and XML simultaneously
 
 ---
+
+## Using Entity Framework Core (Optional)
+
+### Switch to EF Core
+
+To use Entity Framework Core instead of ADO.NET:
+
+1. **Update configuration** in `appsettings.json`:
+   ```json
+   {
+     "DataAccess": {
+       "RepositoryType": "EfCore"
+     }
+   }
+   ```
+
+2. **Apply migrations** (first time only):
+   ```bash
+   # Install EF Core tools (if not already installed)
+   dotnet tool install --global dotnet-ef
+
+   # Apply migrations to create/update database schema
+   cd AnimalZoo.App
+   dotnet ef database update
+   ```
+
+3. **Run the application**:
+   ```bash
+   dotnet run --project AnimalZoo.App/AnimalZoo.App.csproj
+   ```
+
+### EF Core Migration Commands
+
+```bash
+# View migration history
+dotnet ef migrations list
+
+# Create new migration
+dotnet ef migrations add MigrationName --output-dir Data/Migrations
+
+# Apply migrations to database
+dotnet ef database update
+
+# Revert to specific migration
+dotnet ef database update PreviousMigrationName
+
+# Remove last migration (if not applied)
+dotnet ef migrations remove
+
+# Generate SQL script from migrations
+dotnet ef migrations script
+```
+
+### Switching Between ADO.NET and EF Core
+
+Both implementations:
+- Use the **same database schema**
+- Support **all CRUD operations**
+- Can be **switched at runtime** via configuration
+
+No data migration needed - just change `RepositoryType` in `appsettings.json`.
 
 ## Troubleshooting
 

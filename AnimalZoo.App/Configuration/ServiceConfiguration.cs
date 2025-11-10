@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using AnimalZoo.App.Data;
 using AnimalZoo.App.Interfaces;
 using AnimalZoo.App.Logging;
 using AnimalZoo.App.Repositories;
 using AnimalZoo.App.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -87,12 +89,32 @@ public static class ServiceConfiguration
 
         services.AddSingleton<ILogger>(logger);
 
-        // Register repositories
+        // Register repositories based on configuration
         var connectionString = configuration.GetConnectionString("AnimalZooDb")
             ?? throw new InvalidOperationException("Connection string 'AnimalZooDb' not found in configuration.");
 
-        services.AddSingleton<IAnimalsRepository>(new SqlAnimalsRepository(connectionString));
-        services.AddSingleton<IEnclosureRepository>(new SqlEnclosureRepository(connectionString));
+        var repositoryType = configuration["DataAccess:RepositoryType"] ?? "AdoNet";
+
+        if (repositoryType.Equals("EfCore", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("[Data Access] Type: Entity Framework Core");
+
+            // Register DbContext
+            services.AddDbContext<AnimalZooContext>(options =>
+                options.UseSqlServer(connectionString));
+
+            // Register EF Core repositories
+            services.AddScoped<IAnimalsRepository, EfAnimalsRepository>();
+            services.AddScoped<IEnclosureRepository, EfEnclosureRepository>();
+        }
+        else
+        {
+            Console.WriteLine("[Data Access] Type: ADO.NET");
+
+            // Register ADO.NET repositories
+            services.AddSingleton<IAnimalsRepository>(new SqlAnimalsRepository(connectionString));
+            services.AddSingleton<IEnclosureRepository>(new SqlEnclosureRepository(connectionString));
+        }
 
         // Register ViewModels
         services.AddTransient<MainWindowViewModel>();

@@ -40,7 +40,10 @@ Each animal is an object with its own properties, behavior, and dynamic state tr
     - Language can be changed at runtime via the **language dropdown** in the main window.
 - **Database persistence**
     - **SQL Server 2022** database running in Docker for data persistence.
-    - **ADO.NET-based repositories** with CRUD operations for animals and enclosures.
+    - **Dual data access implementations**:
+      - **ADO.NET repositories**: Direct SQL with parameterized queries (default)
+      - **Entity Framework Core**: ORM with migrations and change tracking
+    - Switchable via configuration without code changes.
     - All animal data persists between application restarts.
     - Automatic fallback to in-memory storage if database is unavailable.
     - Docker management via **Makefile** commands or manual Docker/dotnet commands.
@@ -100,9 +103,16 @@ AnimalZoo/
    │  └─ LocalizableLogEntry.cs      # Dynamic localization for log messages
    ├─ Interfaces/                    # Core interfaces (Flyable, ICrazyAction, ILogger, IAnimalsRepository, etc.)
    ├─ Localization/                  # Multilingual support (ENG, RU, EST)
-   ├─ Repositories/                  # Data persistence (SQL + In-Memory adapters)
+   ├─ Repositories/                  # Data persistence (ADO.NET + EF Core + In-Memory)
    │  ├─ SqlAnimalsRepository.cs     # ADO.NET implementation for animals
-   │  └─ SqlEnclosureRepository.cs   # ADO.NET implementation for enclosures
+   │  ├─ SqlEnclosureRepository.cs   # ADO.NET implementation for enclosures
+   │  ├─ EfAnimalsRepository.cs      # Entity Framework Core implementation for animals
+   │  └─ EfEnclosureRepository.cs    # Entity Framework Core implementation for enclosures
+   ├─ Data/                          # Entity Framework Core infrastructure
+   │  ├─ AnimalZooContext.cs         # EF Core DbContext with fluent configuration
+   │  ├─ AnimalZooContextFactory.cs  # Design-time factory for migrations
+   │  ├─ AnimalEnclosureAssignment.cs # POCO for enclosure assignments
+   │  └─ Migrations/                 # EF Core migration files
    ├─ Logging/                       # Pluggable logging (XmlLogger, JsonLogger)
    ├─ Configuration/                 # Dependency injection setup
    ├─ Utils/                         # Helper services (AnimalFactory, SoundService, RelayCommand)
@@ -136,6 +146,53 @@ For detailed setup instructions, Docker management, and database operations, see
 ---
 
 ## **Configuration**
+
+### Data Access
+
+The application supports two data access implementations that can be switched via configuration:
+
+**ADO.NET (default)**:
+```json
+{
+  "DataAccess": {
+    "RepositoryType": "AdoNet"
+  }
+}
+```
+
+**Entity Framework Core**:
+```json
+{
+  "DataAccess": {
+    "RepositoryType": "EfCore"
+  }
+}
+```
+
+**Repository types**:
+- `"AdoNet"` - Direct SQL queries with Microsoft.Data.SqlClient (default)
+- `"EfCore"` - Entity Framework Core with LINQ and migrations
+
+**Differences**:
+- **ADO.NET**: Explicit SQL control, parameterized queries, manual mapping
+- **EF Core**: LINQ queries, automatic change tracking, migrations, fluent configuration
+
+Both implementations:
+- Use the same repository interfaces (IAnimalsRepository, IEnclosureRepository)
+- Support all CRUD operations
+- Work with the same database schema
+- Can be switched without code changes
+
+**When to use ADO.NET**:
+- Need explicit SQL control
+- Performance-critical operations
+- Simple queries without complex relationships
+
+**When to use EF Core**:
+- Prefer LINQ over SQL
+- Need automatic change tracking
+- Want migration support for schema evolution
+- Working with complex object graphs
 
 ### Logging
 

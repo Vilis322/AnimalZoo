@@ -6,6 +6,10 @@ This document explains the database schema and initialization process for the An
 
 The AnimalZoo application uses **SQL Server 2022** with a simple but effective schema design for storing animals and their enclosure assignments.
 
+The application supports **two data access implementations**:
+- **ADO.NET** - Direct SQL queries with manual initialization (default)
+- **Entity Framework Core** - ORM with automatic migrations
+
 ---
 
 ## Database Schema
@@ -51,14 +55,16 @@ Tracks which animals are assigned to which enclosures.
 
 ## Initialization Process
 
-### Method 1: Using Make (Recommended)
+### Option A: ADO.NET Initialization (Default)
+
+#### Method 1: Using Make (Recommended)
 
 ```bash
 # Initialize database schema
 make docker-init
 ```
 
-### Method 2: Manual Execution
+#### Method 2: Manual Execution
 
 ```bash
 # Copy script to container
@@ -70,11 +76,36 @@ docker exec animalzoo-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -i /database-init.sql
 ```
 
-### Method 3: Using Azure Data Studio
+#### Method 3: Using Azure Data Studio
 
 1. Connect to `localhost,1433` with SA credentials
 2. Open `database-init.sql`
 3. Click "Run" or press F5
+
+---
+
+### Option B: Entity Framework Core Migrations
+
+If you're using EF Core (`"RepositoryType": "EfCore"` in appsettings.json):
+
+```bash
+# Install EF Core tools (one-time setup)
+dotnet tool install --global dotnet-ef
+
+# Navigate to the project directory
+cd AnimalZoo.App
+
+# Apply migrations to create database
+dotnet ef database update
+```
+
+**What this does**:
+- Creates the AnimalZooDB database if it doesn't exist
+- Creates Animals and Enclosures tables
+- Creates indexes and foreign keys
+- Applies all pending migrations
+
+**Note**: EF Core migrations and the SQL script create the same schema, so they are interchangeable.
 
 ---
 
@@ -404,9 +435,81 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON Enclosures TO animalzoo_app;
 
 ---
 
+## Entity Framework Core Details
+
+### DbContext Configuration
+
+The `AnimalZooContext` uses:
+- **Table-Per-Hierarchy (TPH)** pattern for animal inheritance
+- **Fluent API** configuration (no data annotations)
+- **String discriminator** column for animal types
+- **Automatic migrations** for schema evolution
+
+### Creating New Migrations
+
+When you modify the data model:
+
+```bash
+cd AnimalZoo.App
+
+# Create a new migration
+dotnet ef migrations add YourMigrationName --output-dir Data/Migrations
+
+# Review the generated migration file
+# Then apply it:
+dotnet ef database update
+```
+
+### Reverting Migrations
+
+```bash
+# Revert to a specific migration
+dotnet ef database update PreviousMigrationName
+
+# Remove the last migration (if not applied)
+dotnet ef migrations remove
+```
+
+### Generating SQL Scripts
+
+```bash
+# Generate SQL for all migrations
+dotnet ef migrations script
+
+# Generate SQL for a specific migration range
+dotnet ef migrations script FromMigration ToMigration
+
+# Generate SQL to revert
+dotnet ef migrations script CurrentMigration PreviousMigration
+```
+
+---
+
+## Comparing ADO.NET vs EF Core
+
+| Feature | ADO.NET | Entity Framework Core |
+|---------|---------|----------------------|
+| **Initialization** | Manual SQL script | Automatic migrations |
+| **Query Style** | Raw SQL strings | LINQ expressions |
+| **Change Tracking** | Manual | Automatic |
+| **Performance** | Slightly faster | Good with optimization |
+| **Type Safety** | Low (strings) | High (compile-time) |
+| **Schema Evolution** | Manual scripts | Migrations |
+| **Learning Curve** | Lower | Higher |
+| **Code Verbosity** | Higher | Lower |
+
+**Both implementations**:
+- Work with the same database
+- Support all CRUD operations
+- Use the same repository interfaces
+- Can be switched via configuration
+
+---
+
 ## See Also
 
 - **[QUICK_START.md](./QUICK_START.md)** - Setup and launch commands
 - **[MAKE.md](./MAKE.md)** - Complete make commands reference
-- **[IMPLEMENTATION_DB_SUMMARY.md](./IMPLEMENTATION_DB_SUMMARY.md)** - Architecture details
+- **[IMPLEMENTATION_DB_SUMMARY.md](./IMPLEMENTATION_DB_SUMMARY.md)** - ADO.NET architecture details
+- **[IMPLEMENTATION_EF_SUMMARY.md](./IMPLEMENTATION_EF_SUMMARY.md)** - EF Core architecture details
 - **[README.md](./README.md)** - Project overview and features
