@@ -19,6 +19,9 @@ COMPOSE_FILE = docker-compose.yml
 # SQL initialization script
 INIT_SCRIPT = database-init.sql
 
+# Configuration file
+APPSETTINGS = AnimalZoo.App/appsettings.json
+
 # Colors for terminal output
 COLOR_RESET = \033[0m
 COLOR_GREEN = \033[32m
@@ -29,7 +32,9 @@ COLOR_RED = \033[31m
 .PHONY: help restore build run clean publish \
         docker-up docker-down docker-restart docker-init docker-logs docker-logs-tail \
         docker-exec docker-status docker-clean docker-rebuild docker-test-connection \
-        docker-clean-db
+        docker-clean-db \
+        use-adonet use-efcore ef-init ef-update ef-migrate ef-migrations-list \
+        ef-migrations-remove show-data-access
 
 # Default target: show help
 help:
@@ -51,11 +56,23 @@ help:
 	@echo "  make docker-logs     - Show SQL Server logs (follow mode)"
 	@echo "  make docker-logs-tail - Show last 50 lines of logs"
 	@echo ""
-	@echo "$(COLOR_GREEN)Database Operations:$(COLOR_RESET)"
-	@echo "  make docker-init     - Initialize database schema (run after first 'docker-up')"
+	@echo "$(COLOR_GREEN)Database Operations (ADO.NET):$(COLOR_RESET)"
+	@echo "  make docker-init     - Initialize database schema with SQL script"
 	@echo "  make docker-exec     - Open SQL command line (sqlcmd) in container"
 	@echo "  make docker-test-connection - Test database connection"
 	@echo "  make docker-clean-db - Clean all data from Animals and Enclosures tables"
+	@echo ""
+	@echo "$(COLOR_GREEN)Data Access Configuration:$(COLOR_RESET)"
+	@echo "  make use-adonet      - Switch to ADO.NET repositories (default)"
+	@echo "  make use-efcore      - Switch to Entity Framework Core repositories"
+	@echo "  make show-data-access - Show current data access configuration"
+	@echo ""
+	@echo "$(COLOR_GREEN)Entity Framework Core Commands:$(COLOR_RESET)"
+	@echo "  make ef-init         - Apply EF Core migrations to database (first time setup)"
+	@echo "  make ef-update       - Apply pending EF Core migrations"
+	@echo "  make ef-migrate      - Create a new migration (NAME=MigrationName)"
+	@echo "  make ef-migrations-list - List all migrations"
+	@echo "  make ef-migrations-remove - Remove last migration (if not applied)"
 	@echo ""
 	@echo "$(COLOR_GREEN)Maintenance:$(COLOR_RESET)"
 	@echo "  make docker-clean    - Remove container and volumes (deletes all data!)"
@@ -67,10 +84,16 @@ help:
 	@echo "  Database:  $(DB_NAME)"
 	@echo "  Platform:  $(PLATFORM) (Apple Silicon compatible)"
 	@echo ""
-	@echo "$(COLOR_BLUE)Quick Start:$(COLOR_RESET)"
+	@echo "$(COLOR_BLUE)Quick Start (ADO.NET - default):$(COLOR_RESET)"
 	@echo "  1. make docker-up    # Start SQL Server"
-	@echo "  2. make docker-init  # Initialize database"
+	@echo "  2. make docker-init  # Initialize database with SQL script"
 	@echo "  3. make run          # Build and run the app"
+	@echo ""
+	@echo "$(COLOR_BLUE)Quick Start (Entity Framework Core):$(COLOR_RESET)"
+	@echo "  1. make docker-up    # Start SQL Server"
+	@echo "  2. make use-efcore   # Switch to EF Core"
+	@echo "  3. make ef-init      # Apply EF Core migrations"
+	@echo "  4. make run          # Build and run the app"
 
 # .NET restore packages
 restore:
@@ -227,3 +250,82 @@ docker-clean-db:
 	else \
 		echo "$(COLOR_BLUE)Cancelled$(COLOR_RESET)"; \
 	fi
+
+# Switch to ADO.NET repositories
+use-adonet:
+	@echo "$(COLOR_BLUE)Switching to ADO.NET repositories...$(COLOR_RESET)"
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		sed -i '' 's/"RepositoryType": "EfCore"/"RepositoryType": "AdoNet"/' $(APPSETTINGS); \
+	else \
+		sed -i 's/"RepositoryType": "EfCore"/"RepositoryType": "AdoNet"/' $(APPSETTINGS); \
+	fi
+	@echo "$(COLOR_GREEN)✓ Switched to ADO.NET$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Note: Use 'make docker-init' to initialize database with SQL script$(COLOR_RESET)"
+
+# Switch to Entity Framework Core repositories
+use-efcore:
+	@echo "$(COLOR_BLUE)Switching to Entity Framework Core repositories...$(COLOR_RESET)"
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		sed -i '' 's/"RepositoryType": "AdoNet"/"RepositoryType": "EfCore"/' $(APPSETTINGS); \
+	else \
+		sed -i 's/"RepositoryType": "AdoNet"/"RepositoryType": "EfCore"/' $(APPSETTINGS); \
+	fi
+	@echo "$(COLOR_GREEN)✓ Switched to Entity Framework Core$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Note: Run 'make ef-init' to apply migrations$(COLOR_RESET)"
+
+# Show current data access configuration
+show-data-access:
+	@echo "$(COLOR_BLUE)Current Data Access Configuration:$(COLOR_RESET)"
+	@grep -A 2 '"DataAccess"' $(APPSETTINGS) | grep '"RepositoryType"' | sed 's/.*"RepositoryType": "\(.*\)".*/  Type: \1/' || echo "  Type: Not configured"
+
+# Apply EF Core migrations (first time setup)
+ef-init:
+	@echo "$(COLOR_GREEN)Applying Entity Framework Core migrations...$(COLOR_RESET)"
+	@if ! command -v dotnet-ef &> /dev/null; then \
+		echo "$(COLOR_YELLOW)Installing dotnet-ef tool...$(COLOR_RESET)"; \
+		dotnet tool install --global dotnet-ef; \
+	fi
+	@if ! docker ps --filter "name=$(DOCKER_NAME)" --filter "status=running" | grep -q $(DOCKER_NAME); then \
+		echo "$(COLOR_RED)Error: Container is not running. Run 'make docker-up' first.$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@cd AnimalZoo.App && dotnet ef database update
+	@echo "$(COLOR_GREEN)✓ EF Core migrations applied successfully$(COLOR_RESET)"
+
+# Apply pending EF Core migrations (same as ef-init)
+ef-update: ef-init
+
+# Create a new EF Core migration
+ef-migrate:
+	@if [ -z "$(NAME)" ]; then \
+		echo "$(COLOR_RED)Error: Migration name not specified$(COLOR_RESET)"; \
+		echo "Usage: make ef-migrate NAME=MigrationName"; \
+		exit 1; \
+	fi
+	@echo "$(COLOR_BLUE)Creating migration: $(NAME)$(COLOR_RESET)"
+	@if ! command -v dotnet-ef &> /dev/null; then \
+		echo "$(COLOR_YELLOW)Installing dotnet-ef tool...$(COLOR_RESET)"; \
+		dotnet tool install --global dotnet-ef; \
+	fi
+	@cd AnimalZoo.App && dotnet ef migrations add $(NAME) --output-dir Data/Migrations
+	@echo "$(COLOR_GREEN)✓ Migration created successfully$(COLOR_RESET)"
+
+# List all EF Core migrations
+ef-migrations-list:
+	@echo "$(COLOR_BLUE)Entity Framework Core Migrations:$(COLOR_RESET)"
+	@if ! command -v dotnet-ef &> /dev/null; then \
+		echo "$(COLOR_RED)Error: dotnet-ef tool not installed$(COLOR_RESET)"; \
+		echo "Run: dotnet tool install --global dotnet-ef"; \
+		exit 1; \
+	fi
+	@cd AnimalZoo.App && dotnet ef migrations list
+
+# Remove last EF Core migration (if not applied)
+ef-migrations-remove:
+	@echo "$(COLOR_YELLOW)Removing last migration...$(COLOR_RESET)"
+	@if ! command -v dotnet-ef &> /dev/null; then \
+		echo "$(COLOR_RED)Error: dotnet-ef tool not installed$(COLOR_RESET)"; \
+		exit 1; \
+	fi
+	@cd AnimalZoo.App && dotnet ef migrations remove
+	@echo "$(COLOR_GREEN)✓ Last migration removed$(COLOR_RESET)"

@@ -252,6 +252,171 @@ make docker-clean-db
 
 ---
 
+## Data Access Configuration
+
+### `make show-data-access`
+Displays the currently active data access implementation.
+
+```bash
+make show-data-access
+```
+
+**Output:** Shows whether the application is using ADO.NET or Entity Framework Core repositories.
+
+**Example:**
+```
+Current Data Access Configuration:
+  Type: AdoNet
+```
+
+---
+
+### `make use-adonet`
+Switches the application to use ADO.NET repositories (default).
+
+```bash
+make use-adonet
+```
+
+**What it does:**
+- Modifies `appsettings.json` to set `RepositoryType: "AdoNet"`
+- Displays confirmation message
+- Shows note about database initialization
+
+**Requirements:** Use `make docker-init` to initialize database with SQL script.
+
+**Use case:** Switch back to ADO.NET after testing EF Core.
+
+---
+
+### `make use-efcore`
+Switches the application to use Entity Framework Core repositories.
+
+```bash
+make use-efcore
+```
+
+**What it does:**
+- Modifies `appsettings.json` to set `RepositoryType: "EfCore"`
+- Displays confirmation message
+- Shows reminder to run migrations
+
+**Requirements:** Run `make ef-init` to apply EF Core migrations to the database.
+
+**Use case:** Enable EF Core features like automatic change tracking and LINQ queries.
+
+---
+
+## Entity Framework Core Commands
+
+### `make ef-init`
+Applies EF Core migrations to create or update the database schema (first time setup).
+
+```bash
+make ef-init
+```
+
+**What it does:**
+- Installs `dotnet-ef` tool if not already installed
+- Checks if SQL Server container is running
+- Applies all pending migrations to the database
+- Creates/updates tables, indexes, and foreign keys
+
+**Requirements:**
+- SQL Server container must be running (`make docker-up`)
+- Application must be configured for EF Core (`make use-efcore`)
+
+**Output:** Creates the same database schema as `docker-init`.
+
+**Run this:** After switching to EF Core for the first time.
+
+---
+
+### `make ef-update`
+Applies pending EF Core migrations (alias for `ef-init`).
+
+```bash
+make ef-update
+```
+
+**What it does:**
+- Same as `make ef-init`
+- Applies any new migrations that haven't been applied yet
+
+**Use case:** Update database schema after pulling changes with new migrations.
+
+---
+
+### `make ef-migrate`
+Creates a new EF Core migration.
+
+```bash
+make ef-migrate NAME=MigrationName
+```
+
+**What it does:**
+- Creates a new migration file in `AnimalZoo.App/Data/Migrations/`
+- Generates code to apply and revert the migration
+- Uses the specified NAME for the migration
+
+**Requirements:** Migration name must be specified via `NAME=` parameter.
+
+**Example:**
+```bash
+make ef-migrate NAME=AddAnimalBirthDate
+```
+
+**Output:** Creates three files:
+- `YYYYMMDDHHMMSS_MigrationName.cs` - Migration code
+- `YYYYMMDDHHMMSS_MigrationName.Designer.cs` - Migration metadata
+- Updates `AnimalZooContextModelSnapshot.cs`
+
+**Use case:** Create a migration after modifying entity models or DbContext configuration.
+
+---
+
+### `make ef-migrations-list`
+Lists all EF Core migrations and their status.
+
+```bash
+make ef-migrations-list
+```
+
+**Output:**
+- All migrations in the project
+- Applied migrations (✓)
+- Pending migrations (not yet applied)
+
+**Example output:**
+```
+20251110134623_InitialCreate (Applied)
+20251115120000_AddAnimalBirthDate (Pending)
+```
+
+**Use case:** Check which migrations have been applied to the database.
+
+---
+
+### `make ef-migrations-remove`
+Removes the last migration (if not yet applied to database).
+
+```bash
+make ef-migrations-remove
+```
+
+**What it does:**
+- Removes the most recent migration
+- Deletes migration files from disk
+- Reverts the model snapshot
+
+**Requirements:** Migration must not be applied to the database yet.
+
+**Warning:** Cannot remove migrations that have already been applied. Use `dotnet ef database update PreviousMigrationName` to revert first.
+
+**Use case:** Fix a mistake in a migration before applying it.
+
+---
+
 ## Maintenance Commands
 
 ### `make docker-clean`
@@ -325,11 +490,33 @@ make docker-up SA_PASSWORD="MySecurePass123!"
 
 ## Common Workflows
 
-### First-Time Setup
+### First-Time Setup (ADO.NET - Default)
 ```bash
 make docker-up      # Start SQL Server
-make docker-init    # Create database schema
+make docker-init    # Create database schema with SQL script
 make run            # Run the application
+```
+
+### First-Time Setup (Entity Framework Core)
+```bash
+make docker-up      # Start SQL Server
+make use-efcore     # Switch to EF Core
+make ef-init        # Apply EF Core migrations
+make run            # Run the application
+```
+
+### Switching Between ADO.NET and EF Core
+```bash
+# Switch to EF Core
+make use-efcore
+make ef-init        # Only needed first time
+
+# Switch back to ADO.NET
+make use-adonet
+# No initialization needed if database already exists
+
+# Check current configuration
+make show-data-access
 ```
 
 ### Daily Development
@@ -344,9 +531,18 @@ make docker-clean-db    # Delete all animals
 make run                # Start with empty database
 ```
 
-### Complete Reset
+### Complete Reset (ADO.NET)
 ```bash
 make docker-rebuild     # Remove everything and start fresh
+make use-adonet         # Ensure ADO.NET is active
+make run                # Run with clean database
+```
+
+### Complete Reset (EF Core)
+```bash
+make docker-rebuild     # Remove everything and start fresh
+make use-efcore         # Switch to EF Core
+make ef-init            # Apply migrations
 make run                # Run with clean database
 ```
 
